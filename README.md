@@ -47,6 +47,9 @@ bash check.sh clean testDebugUnitTest lintDebug assembleDebug
 
 APK: `app/build/outputs/apk/debug/app-debug.apk` (`com.gauto.app.debug`).
 
+**Приёмка 1.0.0:** 20/20 unit-тестов, Lint 25 Warning / 0 Error / 0 Fatal,
+APK 60 980 474 байта, SHA-256 `a8c82d645de881fd079305390e6653cff9ff2ca534452eb1872d974eef403d52`.
+
 ## Обновление внутри приложения
 
 Источник — обычный latest-релиз `https://github.com/GrapeGG-developer/GAUTO/releases`.
