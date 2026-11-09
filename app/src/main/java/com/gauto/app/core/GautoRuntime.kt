@@ -149,7 +149,7 @@ class ApplyService : Service() {
 
     private fun notification(): Notification = Notification.Builder(this, GAUTOApp.CHANNEL_APPLY)
         .setSmallIcon(R.drawable.ic_gauto_foreground)
-        .setContentTitle("GAUTO")
+        .setContentTitle("Gauto")
         .setContentText("Применяю правило…")
         .setAutoCancel(true)
         .build()
@@ -194,7 +194,7 @@ class GautoAccessibilityService : AccessibilityService() {
         store.event("Заблокирован $pkg · $label")
         Handler(Looper.getMainLooper()).post {
             runCatching {
-                Toast.makeText(this, "GAUTO: «$label» — $pkg закрыт", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Gauto: «$label» — $pkg закрыт", Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -287,7 +287,7 @@ object UpdateChecker {
             val nm = context.getSystemService(NotificationManager::class.java) ?: return
             val notification = Notification.Builder(context, GAUTOApp.CHANNEL_UPDATES)
                 .setSmallIcon(R.drawable.ic_gauto_foreground)
-                .setContentTitle("GAUTO ${update.tag} готов")
+                .setContentTitle("Gauto ${update.tag} готов")
                 .setContentText("Обновление скачано, подтвердите установку")
                 .setAutoCancel(true)
                 .build()
@@ -390,7 +390,7 @@ class GAUTOApp : Application() {
             }
         )
         nm.createNotificationChannel(
-            NotificationChannel(CHANNEL_UPDATES, "Обновления GAUTO", NotificationManager.IMPORTANCE_DEFAULT).apply {
+            NotificationChannel(CHANNEL_UPDATES, "Обновления Gauto", NotificationManager.IMPORTANCE_DEFAULT).apply {
                 setShowBadge(true)
                 enableVibration(true)
                 setSound(null, null)

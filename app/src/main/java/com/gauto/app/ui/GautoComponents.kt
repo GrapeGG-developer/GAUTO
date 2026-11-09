@@ -113,7 +113,7 @@ fun PermissionGate(onReady: () -> Unit) {
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            Text("GAUTO · доступы", style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.primary)
+            Text("Gauto · доступы", style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.primary)
             Text(
                 "Приложение полностью локальное. Эти доступы нужны, чтобы правила реально работали: " +
                     "закрывать YouTube, делать экран монохромным и срабатывать вовремя. " +
@@ -337,7 +337,7 @@ fun RuleEditorDialog(
                 onSave(
                     RuleLogic.validate(
                         source.copy(
-                            name = name.ifBlank { "Правило GAUTO" },
+                            name = name.ifBlank { "Правило Gauto" },
                             hour = hour,
                             minute = minute,
                             days = days.sorted(),

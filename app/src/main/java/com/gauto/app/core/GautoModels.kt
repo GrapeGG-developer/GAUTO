@@ -15,7 +15,7 @@ object GautoRepo {
     const val REPO = "GrapeGG-developer/GAUTO"
     const val VERSION = "1.0.0"
     const val VERSION_CODE = 1
-    const val UI_VERSION = "GAUTO Bottom Navigation 1.0"
+    const val UI_VERSION = "Gauto · островок"
     const val DEFAULT_BLOCKED = "com.google.android.youtube,com.google.android.apps.youtube.music,com.ss.android.ugc.trill,com.instagram.android"
     fun apkName(tag: String): String = "GAUTO-$tag-debug.apk"
     fun defaultBlocked(): List<String> = DEFAULT_BLOCKED.split(",")

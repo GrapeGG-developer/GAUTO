@@ -85,7 +85,7 @@ fun HomeScreen(
     ) {
         item {
             GautoCard {
-                Text("GAUTO", style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.primary)
+                Text("Gauto", style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.primary)
                 Text("личная жизнь → навык разработки", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Spacer(Modifier.height(10.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -521,7 +521,7 @@ fun SettingsScreen(
                 SectionTitle("о приложении")
                 Icon(Icons.Filled.Info, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                 Text(
-                    "GAUTO — полностью независимое приложение. Все правила, привычки и " +
+                    "Gauto — полностью независимое приложение. Все правила, привычки и " +
                         "статистика хранятся только на телефоне; интернет нужен лишь для " +
                         "проверки обновлений. ${GautoRepo.UI_VERSION}.",
                     fontSize = 12.sp,
