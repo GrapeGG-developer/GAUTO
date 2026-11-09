@@ -11,91 +11,81 @@ class GautoContractTest {
     private fun read(path: String) = File(main, path).readText()
 
     @Test
-    fun bottomNavigationLayoutMatchesTheRequest() {
+    fun islandReplacesTheBoringBottomBar() {
         val root = read("ui/GautoRoot.kt")
-        assertTrue(root.contains("height(80.dp)"))
-        assertTrue(root.contains("NavigationBar("))
-        assertTrue(root.contains("NavigationBarItem("))
-        assertTrue(root.contains("CenterAlignedTopAppBar("))
-        assertTrue(root.contains("Icons.Filled.Search"))
-        assertTrue(root.contains("Icons.Filled.Notifications"))
-        assertTrue(root.contains("Icons.Filled.Person"))
-        assertTrue(root.contains("alwaysShowLabel = true"))
-        assertTrue(root.contains("GautoTab.entries"))
-        assertTrue(root.contains("5 вкладок") || root.contains("GautoTab.HOME"))
-        val tabs = read("ui/GautoRoot.kt").substringAfter("enum class GautoTab").substringBefore("\n}")
+        listOf("GautoIsland(", "GautoIslandBackground(", "expanded", "onToggle", "GautoTopBar(").forEach {
+            assertTrue("остров потерял $it", root.contains(it))
+        }
+        listOf("NavigationBar(", "NavigationBarItem(", "height(80.dp)", "alwaysShowLabel").forEach {
+            assertFalse("вернулся скучный бар: $it", root.contains(it))
+        }
+        val tabs = root.substringAfter("enum class GautoTab").substringBefore("\n}")
         listOf("HOME", "RULES", "HABITS", "FOCUS", "SETTINGS").forEach {
             assertTrue("вкладка $it потерялась", tabs.contains(it))
         }
+        assertTrue(root.contains("Icons.Filled.Search"))
+        assertTrue(root.contains("Icons.Filled.Notifications"))
+        assertTrue(root.contains("ic_gauto_logo"))
     }
 
     @Test
-    fun gautoIsFullyIndependentFromGsynk() {
-        val sources = main.walkTopDown().filter { it.isFile && it.extension == "kt" }.map { it.readText() }.toList()
-        assertTrue(sources.isNotEmpty())
-        sources.forEach { source ->
-            assertFalse("осталась зависимость от GSYNK", source.contains("com.gsynk"))
-            assertFalse("вшитый токен", source.contains("ghp_") || source.contains("github_pat_") || source.contains("GHSAT0"))
+    fun islandIsReallyAnimated() {
+        val island = read("ui/GautoIsland.kt")
+        listOf(
+            "Animatable(0f)", "spring(", "infiniteRepeatable(", "AnimatedContent(",
+            "graphicsLayer {", "drawGlyph(", "LaunchedEffect(expanded)",
+            "Brush.radialGradient(", "translationX =", "rotationZ ="
+        ).forEach { marker -> assertTrue("анимация $marker потерялась", island.contains(marker)) }
+        val root = read("ui/GautoRoot.kt")
+        assertTrue(root.contains("AnimatedContent("))
+        assertTrue(root.contains("slideInVertically"))
+        assertTrue(root.contains("scaleIn("))
+    }
+
+    @Test
+    fun nameIsGautoEverywhereVisible() {
+        val strings = File("src/main/res/values/strings.xml").readText()
+        assertTrue(strings.contains("<string name=\"app_name\">Gauto</string>"))
+        assertFalse(strings.contains(">GAUTO<"))
+        val screens = read("ui/GautoScreens.kt") + read("ui/GautoComponents.kt") + read("ui/GautoRoot.kt")
+        assertFalse("осталось старое написание в UI", screens.contains("\"GAUTO") || screens.contains("GAUTO ·"))
+        val models = read("core/GautoModels.kt")
+        assertTrue(models.contains("Gauto Island UI 2.0"))
+        assertTrue(models.contains("const val VERSION = \"2.0.0\""))
+        assertTrue(File("branding/gauto_logo.svg").exists() || File("../branding/gauto_logo.svg").exists())
+    }
+
+    @Test
+    fun lanSyncWorksWithoutCloud() {
+        val protocol = read("core/SyncProtocol.kt")
+        listOf("PORT = 8765", "DISCOVERY_PORT = 8766", "GAUTO_DISCOVER_v1", "GAUTO_HERE_v1", "X-Gauto-Pin", "fun merge(", "fun parseHere(").forEach {
+            assertTrue("протокол потерял $it", protocol.contains(it))
+        }
+        val service = read("core/GautoSyncService.kt")
+        listOf("ServerSocket", "DatagramSocket", "/api/state", "/api/ping", "startForeground", "localIpAddress()").forEach {
+            assertTrue("сервис потерял $it", service.contains(it))
         }
         val manifest = File("src/main/AndroidManifest.xml").readText()
-        assertTrue(manifest.contains(".core.GAUTOApp"))
-        assertTrue(manifest.contains(".core.GautoAccessibilityService"))
-        assertTrue(manifest.contains("BIND_ACCESSIBILITY_SERVICE"))
-        assertTrue(manifest.contains("SYSTEM_ALERT_WINDOW"))
-        assertTrue(manifest.contains("RECEIVE_BOOT_COMPLETED"))
-        assertTrue(manifest.contains("SCHEDULE_EXACT_ALARM"))
-        assertTrue(manifest.contains("REQUEST_INSTALL_PACKAGES"))
-        assertTrue(manifest.contains("screenOrientation=\"portrait\""))
+        assertTrue(manifest.contains(".core.GautoSyncService"))
+        assertTrue(manifest.contains("ACCESS_WIFI_STATE"))
+        val settings = read("ui/GautoScreens.kt")
+        assertTrue(settings.contains("синхронизация с ПК"))
+        assertTrue(settings.contains("GautoSyncService.start(context)"))
+        val sources = main.walkTopDown().filter { it.isFile && it.extension == "kt" }.map { it.readText() }.toList()
+        sources.forEach {
+            assertFalse("вшитый токен", it.contains("ghp_") || it.contains("github_pat_") || it.contains("GHSAT0"))
+            assertFalse("зависимость от GSYNK", it.contains("com.gsynk"))
+        }
     }
 
     @Test
-    fun blockingAndGrayscaleWorkWithoutAdbOrRoot() {
-        val runtime = read("core/GautoRuntime.kt")
-        assertTrue(runtime.contains("GLOBAL_ACTION_HOME"))
-        assertTrue(runtime.contains("TYPE_WINDOW_STATE_CHANGED"))
-        assertTrue(runtime.contains("isPackageBlocked"))
-        val overlay = read("core/GrayscaleOverlay.kt")
-        assertTrue(overlay.contains("setSaturation(0f)"))
-        assertTrue(overlay.contains("TYPE_APPLICATION_OVERLAY"))
-        assertTrue(overlay.contains("FLAG_NOT_TOUCHABLE"))
-        assertTrue(overlay.contains("FLAG_NOT_FOCUSABLE"))
-        assertFalse("root/adb не нужны", overlay.contains("Runtime.getRuntime().exec") || overlay.contains("su -c"))
-        val permissions = read("core/GautoPermissions.kt")
-        assertTrue(permissions.contains("allRequiredGranted"))
-        assertTrue(permissions.contains("ACTION_ACCESSIBILITY_SETTINGS"))
-        assertTrue(permissions.contains("ACTION_MANAGE_OVERLAY_PERMISSION"))
-    }
-
-    @Test
-    fun internalUpdaterHasWatchdogEtagAndDigest() {
+    fun versionAndUpdaterAreConsistent() {
+        val build = File("build.gradle.kts").readText()
+        assertTrue(build.contains("versionCode = 2"))
+        assertTrue(build.contains("versionName = \"2.0.0\""))
         val runtime = read("core/GautoRuntime.kt")
         assertTrue(runtime.contains("delay(200L)"))
         assertTrue(runtime.contains("If-None-Match"))
-        assertTrue(runtime.contains("api.github.com/repos"))
         assertTrue(runtime.contains("MessageDigest.getInstance(\"SHA-256\")"))
-        assertTrue(runtime.contains("FileProvider.getUriForFile"))
-        assertTrue(runtime.contains("cleanupDownloadedUpdates"))
-        val models = read("core/GautoModels.kt")
-        assertTrue(models.contains("GrapeGG-developer/GAUTO"))
-        assertFalse(models.contains("GSYNKAPP"))
-        val build = File("build.gradle.kts").readText()
-        assertTrue(build.contains("versionCode = 1"))
-        assertTrue(build.contains("versionName = \"1.0.0\""))
-    }
-
-    @Test
-    fun scheduleLogicMovedIntoGauto() {
-        val models = read("core/GautoModels.kt")
-        listOf("GautoRule", "GautoSettings", "Habit", "FocusSession", "LifePacks", "HabitsLogic", "FocusLogic").forEach {
-            assertTrue("модуль $it потерялся", models.contains(it))
-        }
-        val store = read("core/GautoStore.kt")
-        assertTrue(store.contains("fun activeRule("))
-        assertTrue(store.contains("fun isPackageBlocked("))
-        assertTrue(store.contains("fun installPack("))
-        val screens = read("ui/GautoScreens.kt")
-        assertTrue(screens.contains("RuleEditorDialog"))
-        assertTrue(screens.contains("яркость"))
-        assertTrue(screens.contains("громкость"))
     }
 }

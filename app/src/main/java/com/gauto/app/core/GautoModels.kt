@@ -13,9 +13,9 @@ object GautoRepo {
     const val OWNER = "GrapeGG-developer"
     const val NAME = "GAUTO"
     const val REPO = "GrapeGG-developer/GAUTO"
-    const val VERSION = "1.0.0"
-    const val VERSION_CODE = 1
-    const val UI_VERSION = "Gauto · островок"
+    const val VERSION = "2.0.0"
+    const val VERSION_CODE = 2
+    const val UI_VERSION = "Gauto Island UI 2.0"
     const val DEFAULT_BLOCKED = "com.google.android.youtube,com.google.android.apps.youtube.music,com.ss.android.ugc.trill,com.instagram.android"
     fun apkName(tag: String): String = "GAUTO-$tag-debug.apk"
     fun defaultBlocked(): List<String> = DEFAULT_BLOCKED.split(",")
@@ -73,7 +73,13 @@ data class GautoSettings(
     val streak: Int = 0,
     val lastHabitDate: String = "",
     val autoBrightnessSaved: Boolean = false,
-    val autoBrightnessWasOn: Boolean = false
+    val autoBrightnessWasOn: Boolean = false,
+    /** Синхронизация с ПК по локальной сети. */
+    val syncEnabled: Boolean = false,
+    /** Короткий PIN для LAN-запросов; пустой = без проверки (только доверенная сеть). */
+    val syncPin: String = "",
+    val syncDeviceName: String = "Gauto phone",
+    val lastSyncAt: Long = 0L
 )
 
 @Serializable

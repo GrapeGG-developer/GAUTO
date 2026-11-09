@@ -49,6 +49,8 @@ import com.gauto.app.core.FocusSession
 import com.gauto.app.core.GautoRepo
 import com.gauto.app.core.GautoRule
 import com.gauto.app.core.GautoScheduler
+import com.gauto.app.core.GautoSyncService
+import com.gauto.app.core.SyncProtocol
 import com.gauto.app.core.GautoStore
 import com.gauto.app.core.Habit
 import com.gauto.app.core.HabitsLogic
@@ -80,7 +82,7 @@ fun HomeScreen(
     val streak = habits.maxOfOrNull { HabitsLogic.streak(it.doneDates) } ?: 0
 
     LazyColumn(
-        modifier = Modifier.fillMaxSize().padding(12.dp),
+        modifier = Modifier.fillMaxSize().padding(start = 12.dp, end = 12.dp, top = 12.dp, bottom = 212.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
         item {
@@ -209,7 +211,7 @@ fun RulesScreen(store: GautoStore, revision: Int, onChanged: () -> Unit, query: 
 
     Box(Modifier.fillMaxSize()) {
         LazyColumn(
-            modifier = Modifier.fillMaxSize().padding(12.dp),
+            modifier = Modifier.fillMaxSize().padding(start = 12.dp, end = 12.dp, top = 12.dp, bottom = 212.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             item {
@@ -241,7 +243,7 @@ fun RulesScreen(store: GautoStore, revision: Int, onChanged: () -> Unit, query: 
         }
         FloatingActionButton(
             onClick = { editorRule = null; editorOpen = true },
-            modifier = Modifier.align(Alignment.BottomEnd).padding(16.dp)
+            modifier = Modifier.align(Alignment.BottomEnd).padding(end = 16.dp, bottom = 196.dp)
         ) { Icon(Icons.Filled.Add, contentDescription = "новое правило") }
     }
 
@@ -286,7 +288,7 @@ fun HabitsScreen(store: GautoStore, revision: Int, onChanged: () -> Unit) {
     val habits = remember(revision) { store.habits() }
     val settings = remember(revision) { store.settings() }
     LazyColumn(
-        modifier = Modifier.fillMaxSize().padding(12.dp),
+        modifier = Modifier.fillMaxSize().padding(start = 12.dp, end = 12.dp, top = 12.dp, bottom = 212.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         item {
@@ -319,7 +321,7 @@ fun FocusScreen(store: GautoStore, revision: Int, onChanged: () -> Unit) {
     val settings = remember(revision) { store.settings() }
 
     LazyColumn(
-        modifier = Modifier.fillMaxSize().padding(12.dp),
+        modifier = Modifier.fillMaxSize().padding(start = 12.dp, end = 12.dp, top = 12.dp, bottom = 212.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
         item {
@@ -386,7 +388,7 @@ fun StatsScreen(store: GautoStore, revision: Int) {
     val focusDone = sessions.count { it.completed }
 
     LazyColumn(
-        modifier = Modifier.fillMaxSize().padding(12.dp),
+        modifier = Modifier.fillMaxSize().padding(start = 12.dp, end = 12.dp, top = 12.dp, bottom = 212.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
         item {
@@ -434,7 +436,7 @@ fun SettingsScreen(
     var updateText by remember { mutableStateOf("") }
 
     LazyColumn(
-        modifier = Modifier.fillMaxSize().padding(12.dp),
+        modifier = Modifier.fillMaxSize().padding(start = 12.dp, end = 12.dp, top = 12.dp, bottom = 212.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
         item {
@@ -445,6 +447,28 @@ fun SettingsScreen(
                 Button(onClick = onOpenPermissions, modifier = Modifier.fillMaxWidth()) {
                     Icon(Icons.Filled.Security, contentDescription = null)
                     Text("открыть панель доступов", fontSize = 11.sp)
+                }
+            }
+        }
+        item {
+            GautoCard {
+                SectionTitle("синхронизация с ПК")
+                Text("Gauto Desktop находит телефон сам по локальной сети. Без облака, аккаунта и токена.", fontSize = 11.sp)
+                Spacer(Modifier.height(6.dp))
+                Text("адрес: ${GautoSyncService.localIpAddress().ifBlank { "нет Wi-Fi" }}:${SyncProtocol.PORT}", fontSize = 11.sp, color = MaterialTheme.colorScheme.secondary)
+                Text("UDP-поиск: порт ${SyncProtocol.DISCOVERY_PORT} · PIN: ${settings.syncPin.ifBlank { "не задан" }}", fontSize = 10.sp)
+                Spacer(Modifier.height(8.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text("доступ с ПК", Modifier.weight(1f), fontSize = 12.sp)
+                    Switch(
+                        checked = settings.syncEnabled,
+                        onCheckedChange = { enabled ->
+                            store.ensurePin()
+                            store.saveSettings(store.settings().copy(syncEnabled = enabled))
+                            if (enabled) GautoSyncService.start(context) else GautoSyncService.stop(context)
+                            onChanged()
+                        }
+                    )
                 }
             }
         }

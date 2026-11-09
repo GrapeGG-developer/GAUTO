@@ -378,6 +378,9 @@ class GAUTOApp : Application() {
         runCatching { GautoScheduler.scheduleAll(this, GautoStore(this).rules()) }
         GautoUpdateJobs.schedule(this)
         UpdateWatcher.start(this)
+        runCatching {
+            if (GautoStore(this).settings().syncEnabled) GautoSyncService.start(this)
+        }
     }
 
     private fun createChannels() {

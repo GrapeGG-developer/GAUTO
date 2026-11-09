@@ -92,6 +92,57 @@ class GautoStore(context: Context) {
         event("Фокус «${session.label}» · ${session.minutes} мин")
     }
 
+    fun saveSessions(list: List<FocusSession>) {
+        prefs.edit().putString(KEY_SESSIONS, json.encodeToString(ListSerializer(FocusSession.serializer()), list.takeLast(60))).apply()
+    }
+
+    fun saveEvents(list: List<String>) {
+        prefs.edit().putString(KEY_EVENTS, list.takeLast(30).joinToString("\n") { it.replace('\n', ' ') }).apply()
+    }
+
+    fun ensurePin(): String {
+        val current = settings().syncPin
+        if (current.length >= 4) return current
+        val pin = (1000..9999).random().toString()
+        saveSettings(settings().copy(syncPin = pin))
+        return pin
+    }
+
+    fun snapshot(device: String = settings().syncDeviceName, now: Long = settings().lastSyncAt): GautoState =
+        GautoState(
+            schema = SyncProtocol.SCHEMA,
+            app = "Gauto",
+            device = device,
+            updatedAt = now,
+            rules = rules(),
+            habits = habits(),
+            sessions = sessions(),
+            settings = settings(),
+            events = events()
+        )
+
+    /** Применяет состояние от ПК, если оно свежее; возвращает принятое состояние. */
+    fun applyRemote(text: String): GautoState? {
+        val remote = SyncProtocol.decode(text) ?: return null
+        if (remote.schema != SyncProtocol.SCHEMA) return null
+        val local = snapshot(remote.device)
+        val winner = SyncProtocol.merge(local, remote)
+        if (winner === local || winner.updatedAt <= local.updatedAt) return local
+        saveRules(winner.rules)
+        saveHabits(winner.habits)
+        saveSessions(winner.sessions)
+        saveEvents(winner.events)
+        saveSettings(
+            winner.settings.copy(
+                syncEnabled = settings().syncEnabled,
+                syncPin = settings().syncPin,
+                lastSyncAt = winner.updatedAt
+            )
+        )
+        event("Синхронизировано с ПК · ${winner.device}")
+        return winner
+    }
+
     fun completeSession(id: String) {
         val list = sessions().map { if (it.id == id) it.copy(completed = true) else it }
         prefs.edit().putString(KEY_SESSIONS, json.encodeToString(ListSerializer(FocusSession.serializer()), list)).apply()
