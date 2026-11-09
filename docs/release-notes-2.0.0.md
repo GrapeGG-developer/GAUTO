@@ -56,4 +56,5 @@
 - Android Lint: **26 Warning / 0 Error / 0 Fatal**.
 - Debug APK: `GAUTO-v2.0.0-debug.apk`, **61 079 926 байт**, SHA-256 `01877a8b33bff799a16d5c7442a0b5500001be4ddf9b39ad1ce5dee1b3a25299`.
 - AAPT: `package='com.gauto.app.debug'`, `versionCode='2'`, `versionName='2.0.0'`, `minSdk='30'`, `targetSdk='36'`.
-- Gauto Desktop: `python tests/test_sync.py` — **8 / 8 OK**; `py_compile` всех модулей UI и синхронизации — OK; Windows CI workflow для сборки `Gauto.exe` добавлен.
+- Gauto Desktop: `python tests/test_sync.py` — **8 / 8 OK**; `py_compile` всех модулей UI и синхронизации — OK.
+- Windows CI **success**: собран `Gauto-Desktop-win64.zip` (51 235 220 байт, SHA-256 `a3029b9a415d86244df655fa087990834a029bcabfff9bbf7d6a82bb9a93fce5`) с готовым `Gauto.exe`.
