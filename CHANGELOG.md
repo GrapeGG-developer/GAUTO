@@ -8,6 +8,7 @@
 - **LAN-синхронизация с ПК:** `SyncProtocol`, `GautoSyncService` (HTTP :8765 + UDP :8766), PIN, `GET/POST /api/state`, слияние по `updatedAt`, карточка в настройках с IP и PIN.
 - **Gauto Desktop на PySide6:** тот же островок с анимациями, новая иконка, трей, автозапуск, UDP-поиск телефона, таблицы правил/привычек/фокуса и двусторонняя синхронизация.
 - Добавлены `SyncProtocolTest`, обновлены `GautoContractTest` и `UpdateLogicTest`.
+- **Приёмка:** 25/25 unit-тестов, 8/8 тестов ПК-протокола, Lint 26 Warning / 0 Error / 0 Fatal, Android APK 61 079 926 байт, SHA-256 `01877a8b33bff799a16d5c7442a0b5500001be4ddf9b39ad1ce5dee1b3a25299`.
 
 ## 1.0.0 (versionCode 1) — первый релиз
 

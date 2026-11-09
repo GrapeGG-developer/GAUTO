@@ -48,3 +48,12 @@
   должен находить обновление по OTA. Видимое имя — Gauto.
 - Все прежние правила, привычки, фокус и OTA-логика сохранены; формат `GautoState`
   имеет значения по умолчанию для всех новых полей.
+
+## Полная проверка
+
+- Android: `clean testDebugUnitTest lintDebug assembleDebug` — **BUILD SUCCESSFUL**.
+- Unit-тесты Android: **25 / 25**, failures `0`, errors `0`, skipped `0`.
+- Android Lint: **26 Warning / 0 Error / 0 Fatal**.
+- Debug APK: `GAUTO-v2.0.0-debug.apk`, **61 079 926 байт**, SHA-256 `01877a8b33bff799a16d5c7442a0b5500001be4ddf9b39ad1ce5dee1b3a25299`.
+- AAPT: `package='com.gauto.app.debug'`, `versionCode='2'`, `versionName='2.0.0'`, `minSdk='30'`, `targetSdk='36'`.
+- Gauto Desktop: `python tests/test_sync.py` — **8 / 8 OK**; `py_compile` всех модулей UI и синхронизации — OK; Windows CI workflow для сборки `Gauto.exe` добавлен.
