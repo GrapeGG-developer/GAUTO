@@ -13,6 +13,7 @@
 - `GautoState` schema 2: будильники, таймеры и напоминания синхронизируются с ПК; Gauto Desktop 4.0 получил те же 8 страниц и 4D-кольца.
 - Добавлены `AlarmLogicTest`, обновлены `GautoContractTest`, `UpdateLogicTest` и тесты ПК.
 - **Приёмка:** 36/36 unit-тестов Android, 8/8 тестов ПК, Lint 32 Warning / 0 Error / 0 Fatal, APK 61 407 734 байта, SHA-256 `06783edd121abbd51db37d3102f763544a89daa6ff711c2dc0c9f266a7824dab`.
+- **Опубликовано:** latest `v4.0.0` (release `441986332`), prerelease `gauto-desktop-v4.0.0` (`441986431`) с исходниками и готовым `Gauto.exe` из Windows CI, коммит `b130172`.
 
 ## 3.0.0 (versionCode 3) — «Living Island»
 

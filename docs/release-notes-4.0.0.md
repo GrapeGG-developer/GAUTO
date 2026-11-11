@@ -52,3 +52,10 @@ Gauto Desktop 4.0: 8 страниц, 4D-кольца (глубина + врем�
 - Debug APK: `GAUTO-v4.0.0-debug.apk`, **61 407 734 байта**, SHA-256 `06783edd121abbd51db37d3102f763544a89daa6ff711c2dc0c9f266a7824dab`.
 - AAPT: `package='com.gauto.app.debug'`, `versionCode='4'`, `versionName='4.0.0'`, `minSdk='30'`, `targetSdk='36'`.
 - Gauto Desktop: `python tests/test_sync.py` — **8 / 8 OK**, `py_compile` всех модулей — OK.
+
+## Публикация
+
+- **Android latest:** https://github.com/GrapeGG-developer/GAUTO/releases/tag/v4.0.0 — Release `441986332`, asset `GAUTO-v4.0.0-debug.apk` (`736283404`), `prerelease=false`, `draft=false`.
+- **Gauto Desktop prerelease:** https://github.com/GrapeGG-developer/GAUTO/releases/tag/gauto-desktop-v4.0.0 — Release `441986431`, ассеты `Gauto-Desktop-4.0.0.zip` и `Gauto-Desktop-win64.zip` (`736293147`, 51 240 491 байт, SHA-256 `58bbdddb5e2199a85c55608dae9a8655ff6d427c8b27644c77490e2c839fcd32`).
+- Windows CI: **success**, run `43066545139`.
+- Публичный API: latest = `v4.0.0`, prerelease ПК не сместил latest.
