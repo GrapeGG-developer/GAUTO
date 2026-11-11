@@ -10,6 +10,7 @@
 - **Gauto Desktop 3.0:** тот же Living Island на PySide6 — stagger, волна, анимированный логотип, карусель статусов и системный акцент Windows (`ColorizationColor`).
 - Обновлены `GautoContractTest`, `UpdateLogicTest`, тесты ПК и заметки релиза.
 - **Приёмка:** 26/26 unit-тестов Android, 8/8 тестов ПК, Lint 27 Warning / 0 Error / 0 Fatal, APK 61 112 694 байта, SHA-256 `5839631d91c72cbdafaafa9ab6a46d9278742abd1452a7d775aee4b2336d1a5f`.
+- **Опубликовано:** latest `v3.0.0` (release `441914830`), prerelease `gauto-desktop-v3.0.0` (`441914889`) с исходниками и готовым `Gauto.exe` из Windows CI, коммит `ce7989a`.
 
 ## 2.0.0 (versionCode 2) — «Island UI + Gauto Desktop»
 
