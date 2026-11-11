@@ -1,7 +1,8 @@
-# Gauto Desktop 2.0.0
+# Gauto Desktop 3.0.0
 
-Нативное приложение **Gauto** для Windows на PySide6: тот же живой «островок»,
-из которого веером выходят категории, новая иконка, трей и автозапуск.
+Нативное приложение **Gauto** для Windows на PySide6: тот же **Living Island 3.0** —
+stagger-веер категорий, волна раскрытия, анимированный логотип, живая карусель
+статусов, системный акцент Windows, новая иконка, трей и автозапуск.
 
 ## Синхронизация
 
@@ -27,7 +28,7 @@ python app.py
 ```
 
 Сборка exe (Windows): `python build_exe.py` (нужен `pyinstaller`), результат в `dist/Gauto/`.
-Готовая сборка уже приложена к prerelease `gauto-desktop-v2.0.0` как `Gauto-Desktop-win64.zip`.
+Готовая сборка приложена к prerelease `gauto-desktop-v3.0.0` как `Gauto-Desktop-win64.zip`.
 Иконка — `resources/gauto.png`; для exe используется `resources/gauto.ico`.
 
 ## Тесты

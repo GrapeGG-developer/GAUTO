@@ -74,13 +74,16 @@ class SourceGuardTest(unittest.TestCase):
 
     def test_desktop_has_island_animations_tray_and_autostart(self):
         island = self._read("ui/island.py")
-        for marker in ("paintEvent", "QTimer", "tabSelected = Signal", "drawRoundedRect", "QRadialGradient"):
+        for marker in ("paintEvent", "QTimer", "tabSelected = Signal", "drawRoundedRect", "QRadialGradient", "set_statuses", "_petal", "_draw_logo", "system_accents"):
             self.assertIn(marker, island)
         window = self._read("ui/main_window.py")
         for marker in ("QSystemTrayIcon", "CurrentVersion\\\\Run", "IslandWidget", "SyncWorker", "_pull", "_push"):
             self.assertIn(marker, window)
         self.assertIn("Gauto", self._read("app.py"))
         self.assertIn("PySide6", self._read("requirements.txt"))
+        self.assertIn("system_accents", self._read("ui/theme.py"))
+        self.assertIn("3.0.0", self._read("app.py"))
+        self.assertIn("set_statuses", window)
 
     def test_no_cloud_no_tokens(self):
         for path in ("gautosync/client.py", "gautosync/protocol.py", "ui/main_window.py", "app.py"):

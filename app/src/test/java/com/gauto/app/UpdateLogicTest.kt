@@ -53,8 +53,9 @@ class UpdateLogicTest {
         assertEquals(0, UpdateLogic.versionCodeFromTag("мусор"))
         assertFalse(UpdateLogic.isNewer("v1.0.0"))
         assertFalse(UpdateLogic.isNewer("v2.0.0"))
-        assertTrue(UpdateLogic.isNewer("v2.0.1"))
-        assertTrue(UpdateLogic.isNewer("v2.1.0"))
+        assertFalse(UpdateLogic.isNewer("v3.0.0"))
+        assertTrue(UpdateLogic.isNewer("v3.0.1"))
+        assertTrue(UpdateLogic.isNewer("v3.1.0"))
         assertFalse(UpdateLogic.isNewer("v0.9.9"))
     }
 
@@ -66,6 +67,6 @@ class UpdateLogicTest {
         assertTrue(UpdateLogic.apkUrl(GautoRepo.REPO, "v1.0.1").contains("GrapeGG-developer/GAUTO"))
         assertEquals("GAUTO-v1.0.1-debug.apk", UpdateLogic.safeApkFileName("v1.0.1"))
         assertEquals("GrapeGG-developer/GAUTO", GautoRepo.REPO)
-        assertEquals("2.0.0", GautoRepo.VERSION)
+        assertEquals("3.0.0", GautoRepo.VERSION)
     }
 }

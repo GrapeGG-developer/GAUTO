@@ -538,6 +538,16 @@ fun SettingsScreen(
                         onCheckedChange = { store.saveSettings(settings.copy(syncAfterBoot = it)); onChanged() }
                     )
                 }
+                Spacer(Modifier.height(8.dp))
+                Text("живость островка", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    listOf("спокойно" to 0, "обычно" to 1, "максимум" to 2).forEach { (label, level) ->
+                        GautoChip(label, settings.motionLevel == level) {
+                            store.saveSettings(store.settings().copy(motionLevel = level))
+                            onChanged()
+                        }
+                    }
+                }
             }
         }
         item {

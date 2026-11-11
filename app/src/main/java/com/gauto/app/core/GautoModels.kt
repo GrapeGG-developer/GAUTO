@@ -13,9 +13,9 @@ object GautoRepo {
     const val OWNER = "GrapeGG-developer"
     const val NAME = "GAUTO"
     const val REPO = "GrapeGG-developer/GAUTO"
-    const val VERSION = "2.0.0"
-    const val VERSION_CODE = 2
-    const val UI_VERSION = "Gauto Island UI 2.0"
+    const val VERSION = "3.0.0"
+    const val VERSION_CODE = 3
+    const val UI_VERSION = "Gauto Living Island 3.0"
     const val DEFAULT_BLOCKED = "com.google.android.youtube,com.google.android.apps.youtube.music,com.ss.android.ugc.trill,com.instagram.android"
     fun apkName(tag: String): String = "GAUTO-$tag-debug.apk"
     fun defaultBlocked(): List<String> = DEFAULT_BLOCKED.split(",")
@@ -79,7 +79,9 @@ data class GautoSettings(
     /** Короткий PIN для LAN-запросов; пустой = без проверки (только доверенная сеть). */
     val syncPin: String = "",
     val syncDeviceName: String = "Gauto phone",
-    val lastSyncAt: Long = 0L
+    val lastSyncAt: Long = 0L,
+    /** Живость анимаций: 0 — спокойно, 1 — обычно, 2 — максимум. */
+    val motionLevel: Int = 2
 )
 
 @Serializable

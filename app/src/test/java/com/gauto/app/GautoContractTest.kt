@@ -25,7 +25,7 @@ class GautoContractTest {
         }
         assertTrue(root.contains("Icons.Filled.Search"))
         assertTrue(root.contains("Icons.Filled.Notifications"))
-        assertTrue(root.contains("ic_gauto_logo"))
+        assertTrue(root.contains("GautoAnimatedLogo("))
     }
 
     @Test
@@ -50,8 +50,8 @@ class GautoContractTest {
         val screens = read("ui/GautoScreens.kt") + read("ui/GautoComponents.kt") + read("ui/GautoRoot.kt")
         assertFalse("осталось старое написание в UI", screens.contains("\"GAUTO") || screens.contains("GAUTO ·"))
         val models = read("core/GautoModels.kt")
-        assertTrue(models.contains("Gauto Island UI 2.0"))
-        assertTrue(models.contains("const val VERSION = \"2.0.0\""))
+        assertTrue(models.contains("Gauto Living Island 3.0"))
+        assertTrue(models.contains("const val VERSION = \"3.0.0\""))
         assertTrue(File("branding/gauto_logo.svg").exists() || File("../branding/gauto_logo.svg").exists())
     }
 
@@ -79,10 +79,37 @@ class GautoContractTest {
     }
 
     @Test
+    fun materialYouAnimatedLogoAndMaximumMotion() {
+        val theme = read("ui/GautoTheme.kt")
+        listOf("dynamicDarkColorScheme", "LocalGautoAccents", "LocalGautoMotion", "Build.VERSION_CODES.S").forEach {
+            assertTrue("Material You потерял $it", theme.contains(it))
+        }
+        val logo = read("ui/GautoAnimatedLogo.kt")
+        listOf("rememberInfiniteTransition", "drawRoundRect", "drawCircle", "LocalGautoAccents", "LocalGautoMotion").forEach {
+            assertTrue("анимированный логотип потерял $it", logo.contains(it))
+        }
+        val island = read("ui/GautoIsland.kt")
+        listOf(
+            "petalProgress", "delay(", "statusCarousel", "statuses", "waveTransition",
+            "GautoAnimatedLogo(", "LocalHapticFeedback", "LocalGautoMotion", "drawLine("
+        ).forEach { marker -> assertTrue("максимум движения потерял $marker", island.contains(marker)) }
+        val root = read("ui/GautoRoot.kt")
+        assertTrue(root.contains("GautoAnimatedLogo("))
+        assertTrue(root.contains("GautoTheme(motion = motion)"))
+        assertTrue(root.contains("LocalGautoAccents"))
+        assertTrue(root.contains("statuses = statuses"))
+        val screens = read("ui/GautoScreens.kt")
+        assertTrue(screens.contains("живость островка"))
+        assertTrue(screens.contains("motionLevel"))
+        val models = read("core/GautoModels.kt")
+        assertTrue(models.contains("motionLevel"))
+    }
+
+    @Test
     fun versionAndUpdaterAreConsistent() {
         val build = File("build.gradle.kts").readText()
-        assertTrue(build.contains("versionCode = 2"))
-        assertTrue(build.contains("versionName = \"2.0.0\""))
+        assertTrue(build.contains("versionCode = 3"))
+        assertTrue(build.contains("versionName = \"3.0.0\""))
         val runtime = read("core/GautoRuntime.kt")
         assertTrue(runtime.contains("delay(200L)"))
         assertTrue(runtime.contains("If-None-Match"))

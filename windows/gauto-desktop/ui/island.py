@@ -1,7 +1,7 @@
-"""Живой «островок» Gauto для ПК: капсула + веер категорий.
+"""Живой «островок» Gauto 3.0 для ПК.
 
-Тот же язык, что на телефоне: пружинное раскрытие, дыхание капсулы,
-собственные геометрические глифы и мягкое свечение.
+Максимум движения: stagger-появление лепестков, волна раскрытия, дыхание,
+анимированный логотип с лепестками и живая карусель статусов в капсуле.
 """
 from __future__ import annotations
 
@@ -13,13 +13,9 @@ from PySide6.QtGui import (
 )
 from PySide6.QtWidgets import QWidget
 
-TABS = [
-    ("Главная", "#8B5CF6"),
-    ("Правила", "#22D3EE"),
-    ("Привычки", "#34D399"),
-    ("Фокус", "#FBBF24"),
-    ("Настройки", "#F472B6"),
-]
+from .theme import system_accents
+
+TABS = ["Главная", "Правила", "Привычки", "Фокус", "Настройки"]
 
 
 class IslandWidget(QWidget):
@@ -29,27 +25,56 @@ class IslandWidget(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setMinimumWidth(420)
-        self.setFixedHeight(250)
+        self.setFixedHeight(258)
+        self.accents = system_accents()
         self.progress = 0.0
         self.target = 0.0
         self.expanded = False
         self.active = 0
-        self.status = "правил пока нет"
+        self.statuses = ["правил пока нет"]
+        self._status_index = 0
+        self._status_elapsed = 0.0
+        self._petal = [0.0] * len(TABS)
+        self._t = 0.0
         self._phase = 0.0
         self._timer = QTimer(self)
         self._timer.timeout.connect(self._tick)
         self._timer.start(16)
 
+    @property
+    def status(self) -> str:
+        return self.statuses[self._status_index % max(1, len(self.statuses))]
+
+    def set_statuses(self, items):
+        clean = [str(x)[:52] for x in items if str(x).strip()]
+        self.statuses = clean or ["Gauto"]
+        self._status_index = 0
+        self._status_elapsed = 0.0
+        self.update()
+
+    def set_status(self, text: str):
+        self.set_statuses([text])
+
     def _tick(self):
         self._phase += 0.016
+        self._t += 0.016
+        self._status_elapsed += 0.016
+        if len(self.statuses) > 1 and self._status_elapsed >= 3.0:
+            self._status_elapsed = 0.0
+            self._status_index = (self._status_index + 1) % len(self.statuses)
         self.progress += (self.target - self.progress) * 0.17
         if abs(self.target - self.progress) < 0.002:
             self.progress = self.target
+        for i in range(len(TABS)):
+            delay = (i if self.expanded else (len(TABS) - 1 - i)) * 0.055
+            wanted = (1.0 if self._t >= delay else 0.0) if self.expanded else (0.0 if self._t >= delay else 1.0)
+            self._petal[i] += (wanted - self._petal[i]) * 0.18
         self.update()
 
     def set_expanded(self, value: bool):
         self.expanded = bool(value)
         self.target = 1.0 if self.expanded else 0.0
+        self._t = 0.0
         self.toggled.emit(self.expanded)
 
     def toggle(self):
@@ -59,26 +84,23 @@ class IslandWidget(QWidget):
         self.active = max(0, min(len(TABS) - 1, index))
         self.update()
 
-    def set_status(self, text: str):
-        self.status = text[:52]
-        self.update()
-
     def _geometry(self, index: int):
         w, h = self.width(), self.height()
         cx, cy = w / 2.0, h - 62.0
         angle = math.radians(-64 + index * 32)
-        radius = 150.0 * self.progress
+        pp = self._petal[index]
+        radius = 150.0 * pp
         x = cx + math.sin(angle) * radius
         y = cy - math.cos(angle) * radius - 8.0
-        size = 66.0 * (0.55 + 0.45 * self.progress)
-        return x, y, size, angle
+        size = 66.0 * (0.55 + 0.45 * pp)
+        return x, y, size, angle, pp
 
     def mousePressEvent(self, event):
         pos: QPointF = event.position()
         if self.progress > 0.5:
             for index in range(len(TABS)):
-                x, y, size, _ = self._geometry(index)
-                if abs(pos.x() - x) <= size / 2 and abs(pos.y() - y) <= size / 2:
+                x, y, size, _, pp = self._geometry(index)
+                if pp > 0.5 and abs(pos.x() - x) <= size / 2 and abs(pos.y() - y) <= size / 2:
                     self.tabSelected.emit(index)
                     self.set_expanded(False)
                     return
@@ -95,6 +117,7 @@ class IslandWidget(QWidget):
         painter.setRenderHint(QPainter.Antialiasing)
         w, h = self.width(), self.height()
         cx, cy = w / 2.0, h - 62.0
+        accent = QColor(self.accents[self.active])
 
         background = QLinearGradient(0, 0, w, h)
         background.setColorAt(0, QColor("#070B18"))
@@ -102,35 +125,44 @@ class IslandWidget(QWidget):
         background.setColorAt(1, QColor("#121B36"))
         painter.fillRect(self.rect(), QBrush(background))
 
-        accent = QColor(TABS[self.active][1])
         glow = QRadialGradient(cx, cy, w * 0.62)
-        glow.setColorAt(0, QColor(accent.red(), accent.green(), accent.blue(), int(52 + 34 * self.progress)))
+        glow.setColorAt(0, QColor(accent.red(), accent.green(), accent.blue(), int(58 + 40 * self.progress)))
         glow.setColorAt(1, QColor(0, 0, 0, 0))
         painter.fillRect(self.rect(), QBrush(glow))
 
-        amplify = 1.0 + 0.7 * self.progress
-        for i in range(26):
+        amplify = 1.0 + 0.9 * self.progress
+        for i in range(42):
             fx = ((i * 73 + 11) % 100) / 100.0
             fy = ((i * 47 + 29) % 100) / 100.0
             drift = math.sin(self._phase * 1.7 + i * 0.71)
             rise = math.cos(self._phase * 1.4 + i * 0.43)
-            x = w * fx + drift * 20 * amplify
-            y = h * fy + rise * 12 * amplify
-            radius = 1.4 + 2.4 * ((i % 5) / 5.0)
-            alpha = 18 + 34 * (0.5 + 0.5 * drift)
+            x = w * fx + drift * 22 * amplify
+            y = h * fy + rise * 13 * amplify
+            radius = 1.3 + 2.6 * ((i % 5) / 5.0)
+            alpha = 18 + 38 * (0.5 + 0.5 * drift)
             painter.setBrush(QBrush(QColor(accent.red(), accent.green(), accent.blue(), int(alpha))))
             painter.setPen(Qt.NoPen)
             painter.drawEllipse(QPointF(x, y), radius, radius)
+            if self.expanded and i % 6 == 0:
+                painter.setPen(QPen(QColor(accent.red(), accent.green(), accent.blue(), 22), 1))
+                painter.drawLine(QPointF(x, y), QPointF(x - drift * 26, y + rise * 16))
 
-        for index, (title, color_hex) in enumerate(TABS):
-            x, y, size, angle = self._geometry(index)
-            if self.progress < 0.01:
+        # Волна раскрытия.
+        if self.progress > 0.01:
+            wave = self._phase % 1.0
+            painter.setBrush(Qt.NoBrush)
+            painter.setPen(QPen(QColor(accent.red(), accent.green(), accent.blue(), int(90 * (1 - wave) * self.progress)), 2))
+            painter.drawEllipse(QPointF(cx, cy), 40 + 120 * wave, 40 + 120 * wave)
+
+        for index, title in enumerate(TABS):
+            x, y, size, _, pp = self._geometry(index)
+            if pp < 0.01:
                 continue
-            painter.setOpacity(self.progress)
+            color = QColor(self.accents[index])
+            painter.setOpacity(pp)
             petal = QLinearGradient(x - size / 2, y - size / 2, x + size / 2, y + size / 2)
-            base = QColor(color_hex)
-            petal.setColorAt(0, base)
-            petal.setColorAt(1, QColor(base.red(), base.green(), base.blue(), 150))
+            petal.setColorAt(0, color)
+            petal.setColorAt(1, QColor(color.red(), color.green(), color.blue(), 150))
             painter.setBrush(QBrush(petal))
             painter.setPen(Qt.NoPen)
             painter.drawRoundedRect(QRectF(x - size / 2, y - size / 2, size, size), 22, 22)
@@ -139,14 +171,11 @@ class IslandWidget(QWidget):
             font = QFont()
             font.setPointSize(7)
             painter.setFont(font)
-            painter.drawText(
-                QRectF(x - size / 2, y + size / 2 - 18, size, 16),
-                Qt.AlignCenter, title,
-            )
+            painter.drawText(QRectF(x - size / 2, y + size / 2 - 18, size, 16), Qt.AlignCenter, title)
             painter.setOpacity(1.0)
 
-        breath = 1.0 + 0.012 * math.sin(self._phase * 2.1)
-        capsule_w = (208.0 + 38.0 * self.progress) * breath
+        breath = 1.0 + 0.016 * math.sin(self._phase * 2.1)
+        capsule_w = (210.0 + 40.0 * self.progress) * breath
         capsule_h = 68.0 * breath
         rect = QRectF(cx - capsule_w / 2, cy - capsule_h / 2, capsule_w, capsule_h)
         capsule = QLinearGradient(rect.left(), rect.top(), rect.right(), rect.bottom())
@@ -157,15 +186,7 @@ class IslandWidget(QWidget):
         painter.setPen(QPen(QColor(255, 255, 255, 38), 1))
         painter.drawRoundedRect(rect, capsule_h / 2, capsule_h / 2)
 
-        logo = QLinearGradient(rect.left() + 16, cy - 16, rect.left() + 48, cy + 16)
-        logo.setColorAt(0, QColor("#8B5CF6"))
-        logo.setColorAt(1, QColor("#22D3EE"))
-        painter.setBrush(QBrush(logo))
-        painter.setPen(Qt.NoPen)
-        painter.drawEllipse(QPointF(rect.left() + 32, cy), 16, 16)
-        painter.setBrush(QBrush(QColor(255, 255, 255, int(110 + 80 * (1 + math.sin(self._phase * 2.1)) / 2))))
-        painter.drawEllipse(QPointF(rect.left() + 32, cy), 6, 6)
-
+        self._draw_logo(painter, rect.left() + 32, cy)
         painter.setPen(QPen(QColor("#FFFFFF"), 1))
         title_font = QFont()
         title_font.setPointSize(11)
@@ -173,7 +194,7 @@ class IslandWidget(QWidget):
         painter.setFont(title_font)
         painter.drawText(
             QRectF(rect.left() + 58, cy - 20, rect.width() - 78, 20),
-            Qt.AlignLeft | Qt.AlignVCenter, f"Gauto · {TABS[self.active][0]}",
+            Qt.AlignLeft | Qt.AlignVCenter, f"Gauto · {TABS[self.active]}",
         )
         status_font = QFont()
         status_font.setPointSize(8)
@@ -187,6 +208,30 @@ class IslandWidget(QWidget):
         painter.setPen(Qt.NoPen)
         painter.drawEllipse(QPointF(rect.right() - 16, cy), 5, 5)
         painter.end()
+
+    def _draw_logo(self, painter: QPainter, x: float, y: float):
+        """Анимированный логотип: капсула + дышащие лепестки."""
+        first = QColor(self.accents[0])
+        second = QColor(self.accents[1])
+        for i in range(5):
+            angle = math.radians(-64 + i * 32)
+            wave = (math.sin(self._phase * 2.4 + i * 0.8) + 1) / 2
+            reach = 13 + 6 * wave
+            px = x + math.sin(angle) * reach * 0.7
+            py = y - math.cos(angle) * reach * 0.7
+            color = QColor(self.accents[i])
+            painter.setBrush(QBrush(QColor(color.red(), color.green(), color.blue(), int(140 + 100 * wave))))
+            painter.setPen(Qt.NoPen)
+            painter.drawEllipse(QPointF(px, py), 3 + 1.6 * wave, 3 + 1.6 * wave)
+        grad = QLinearGradient(x - 16, y, x + 16, y)
+        grad.setColorAt(0, first)
+        grad.setColorAt(1, second)
+        painter.setBrush(QBrush(grad))
+        painter.setPen(Qt.NoPen)
+        painter.drawRoundedRect(QRectF(x - 16, y - 8, 32, 16), 8, 8)
+        pulse = (math.sin(self._phase * 4.2) + 1) / 2
+        painter.setBrush(QBrush(QColor(255, 255, 255, int(190 + 60 * pulse))))
+        painter.drawEllipse(QPointF(x, y), 3 + pulse, 3 + pulse)
 
     @staticmethod
     def _draw_glyph(painter: QPainter, index: int, x: float, y: float, size: float):

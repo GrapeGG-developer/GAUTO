@@ -41,11 +41,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import com.gauto.app.R
 import com.gauto.app.core.GautoPermissions
 import com.gauto.app.core.GautoStore
+import com.gauto.app.core.HabitsLogic
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 
@@ -61,6 +60,7 @@ enum class GautoTab(val title: String, val accent: Color) {
 @Composable
 fun GautoTopBar(
     title: String,
+    activeIndex: Int,
     unread: Int,
     onSearch: () -> Unit,
     onNotifications: () -> Unit
@@ -68,16 +68,10 @@ fun GautoTopBar(
     CenterAlignedTopAppBar(
         navigationIcon = {
             IconButton(onClick = { }) {
-                Icon(
-                    painter = painterResource(R.drawable.ic_gauto_logo),
-                    contentDescription = "Gauto",
-                    tint = Color.Unspecified
-                )
+                GautoAnimatedLogo(Modifier.size(34.dp), activeIndex = activeIndex)
             }
         },
-        title = {
-            Text("Gauto · $title", style = MaterialTheme.typography.titleMedium)
-        },
+        title = { Text("Gauto · $title", style = MaterialTheme.typography.titleMedium) },
         actions = {
             IconButton(onClick = onSearch) {
                 Icon(Icons.Filled.Search, contentDescription = "поиск")
@@ -117,8 +111,27 @@ fun GautoRoot() {
     var expanded by remember { mutableStateOf(false) }
     var revision by remember { mutableIntStateOf(0) }
     var gate by remember { mutableStateOf(!GautoPermissions.allRequiredGranted(context)) }
-    val activeLabel = remember(revision) {
-        store.activeRule()?.let { "${it.timeLabel} · ${it.name}" } ?: "правил пока нет"
+    val accents = LocalGautoAccents.current
+
+    val settings = remember(revision) { store.settings() }
+    val motion = remember(settings.motionLevel) {
+        when (settings.motionLevel) {
+            0 -> 0.35f
+            1 -> 0.7f
+            else -> 1f
+        }
+    }
+    val statuses = remember(revision) {
+        buildList {
+            val active = store.activeRule()
+            add(if (active != null) "${active.timeLabel} · ${active.name}" else "правил пока нет")
+            add("уровень ${HabitsLogic.level(settings.xp)} · ${settings.xp} xp")
+            add("стрик ${settings.streak} дн. · ${store.habits().size} привычек")
+            val done = store.sessions().count { it.completed }
+            add("фокус-сессий завершено: $done")
+            add("синхронизация с ПК: ${if (settings.syncEnabled) "вкл" else "выкл"}")
+            store.events().lastOrNull()?.let { add(it.take(46)) }
+        }
     }
     val unread = remember(revision) { store.events().size % 7 }
 
@@ -129,14 +142,17 @@ fun GautoRoot() {
         }
     }
 
-    GautoTheme {
+    GautoTheme(motion = motion) {
         if (gate) {
             PermissionGate(onReady = { gate = false })
             return@GautoTheme
         }
 
         Box(Modifier.fillMaxSize()) {
-            GautoIslandBackground(accent = tab.accent, expanded = expanded)
+            GautoIslandBackground(
+                accent = accents.getOrElse(tab.ordinal) { accents.first() },
+                expanded = expanded
+            )
 
             Scaffold(
                 modifier = Modifier.fillMaxSize(),
@@ -144,17 +160,14 @@ fun GautoRoot() {
                 topBar = {
                     GautoTopBar(
                         title = tab.title,
+                        activeIndex = tab.ordinal,
                         unread = unread,
                         onSearch = { showSearch = true },
                         onNotifications = { showNotifications = true }
                     )
                 }
             ) { padding ->
-                Box(
-                    modifier = Modifier
-                        .padding(padding)
-                        .fillMaxSize()
-                ) {
+                Box(Modifier.padding(padding).fillMaxSize()) {
                     AnimatedContent(
                         targetState = tab,
                         transitionSpec = {
@@ -173,8 +186,6 @@ fun GautoRoot() {
                             GautoTab.SETTINGS -> SettingsScreen(store, revision, { revision++ }) { gate = true }
                         }
                     }
-                    // Место для острова, чтобы контент не уходил под капсулу.
-                    Box(Modifier.fillMaxSize())
                 }
             }
 
@@ -192,7 +203,7 @@ fun GautoRoot() {
 
             GautoIsland(
                 current = tab,
-                activeLabel = activeLabel,
+                statuses = statuses,
                 expanded = expanded,
                 onToggle = { expanded = !expanded },
                 onSelect = { selected ->

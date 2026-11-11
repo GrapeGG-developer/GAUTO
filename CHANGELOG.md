@@ -1,5 +1,16 @@
 # История Gauto
 
+## 3.0.0 (versionCode 3) — «Living Island»
+
+- **Material You:** `dynamicDarkColorScheme` на Android 12+, `LocalGautoAccents` для лепестков и фона, фирменный fallback на Android 11.
+- **Анимированный логотип** `GautoAnimatedLogo`: дышащие лепестки, пульсирующее ядро, реакция на активную категорию; используется в шапке и в капсуле.
+- **Максимум движения:** stagger-раскрытие каждого лепестка отдельным `Animatable` (48 мс), обратный порядок при схлопывании, волна раскрытия, wobble, 42 частицы с хвостами, усиленное свечение, тактильный отклик `HapticFeedbackType.LongPress`.
+- **Живая карусель статусов** в капсуле: активное правило / уровень и xp / стрик / фокус-сессии / синхронизация / последнее событие, смена каждые 3 с через `AnimatedContent`.
+- **Настройка «живость островка»** (`motionLevel`: спокойно / обычно / максимум) реально меняет амплитуду анимаций через `LocalGautoMotion`.
+- **Gauto Desktop 3.0:** тот же Living Island на PySide6 — stagger, волна, анимированный логотип, карусель статусов и системный акцент Windows (`ColorizationColor`).
+- Обновлены `GautoContractTest`, `UpdateLogicTest`, тесты ПК и заметки релиза.
+- **Приёмка:** 26/26 unit-тестов Android, 8/8 тестов ПК, Lint 27 Warning / 0 Error / 0 Fatal, APK 61 112 694 байта, SHA-256 `5839631d91c72cbdafaafa9ab6a46d9278742abd1452a7d775aee4b2336d1a5f`.
+
 ## 2.0.0 (versionCode 2) — «Island UI + Gauto Desktop»
 
 - **Новый логотип** `branding/gauto_logo.svg`: капсула-остров с пятью расходящимися лепестками-категориями; новые `ic_launcher`, `ic_gauto_logo`, `ic_gauto_foreground`.

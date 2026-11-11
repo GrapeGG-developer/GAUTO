@@ -11,3 +11,6 @@
 *.apk
 *.ap_
 *.aab
+
+__pycache__/
+*.pyc

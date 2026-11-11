@@ -15,6 +15,7 @@ from PySide6.QtWidgets import (
 
 from gautosync import Client, PORT, State, discover
 from .island import TABS, IslandWidget
+from .theme import system_accents
 
 DARK_BG = "#070B18"
 CARD_BG = "#121B36"
@@ -86,7 +87,7 @@ class MainWindow(QMainWindow):
         palette.setColor(QPalette.Text, QColor(TEXT))
         palette.setColor(QPalette.Button, QColor(CARD_BG))
         palette.setColor(QPalette.ButtonText, QColor(TEXT))
-        palette.setColor(QPalette.Highlight, QColor("#8B5CF6"))
+        palette.setColor(QPalette.Highlight, QColor(system_accents()[0]))
         palette.setColor(QPalette.HighlightedText, QColor(TEXT))
         QApplication.instance().setPalette(palette)
 
@@ -270,9 +271,16 @@ class MainWindow(QMainWindow):
         self.state = state
         self._render(state)
         self.sync_status.setText(f"синхронизировано · {state.device} · правил {len(state.rules)}")
-        self.island.set_status(
-            f"{len(state.rules)} правил · {len(state.habits)} привычек"
-        )
+        settings = state.settings or {}
+        xp = int(settings.get("xp", 0) or 0)
+        level = 1 + int((max(xp, 0) / 50.0) ** 0.5)
+        self.island.set_statuses([
+            f"{len(state.rules)} правил · {len(state.habits)} привычек",
+            f"уровень {level} · {xp} xp",
+            f"стрик {int(settings.get('streak', 0) or 0)} дн.",
+            f"фокус-сессий: {sum(1 for s in state.sessions if s.get('completed'))}",
+            f"синхронизация: {state.device}",
+        ])
 
     def _render(self, state: State):
         settings = state.settings or {}
