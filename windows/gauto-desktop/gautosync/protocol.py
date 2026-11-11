@@ -9,7 +9,7 @@ import time
 from dataclasses import asdict, dataclass, field
 from typing import Any, Dict, List, Optional
 
-SCHEMA = 1
+SCHEMA = 2
 PORT = 8765
 DISCOVERY_PORT = 8766
 DISCOVER_MAGIC = "GAUTO_DISCOVER_v1"
@@ -26,6 +26,9 @@ class State:
     rules: List[Dict[str, Any]] = field(default_factory=list)
     habits: List[Dict[str, Any]] = field(default_factory=list)
     sessions: List[Dict[str, Any]] = field(default_factory=list)
+    alarms: List[Dict[str, Any]] = field(default_factory=list)
+    timers: List[Dict[str, Any]] = field(default_factory=list)
+    reminders: List[Dict[str, Any]] = field(default_factory=list)
     settings: Dict[str, Any] = field(default_factory=dict)
     events: List[str] = field(default_factory=list)
 
@@ -48,6 +51,9 @@ class State:
                 rules=list(raw.get("rules", []) or []),
                 habits=list(raw.get("habits", []) or []),
                 sessions=list(raw.get("sessions", []) or []),
+                alarms=list(raw.get("alarms", []) or []),
+                timers=list(raw.get("timers", []) or []),
+                reminders=list(raw.get("reminders", []) or []),
                 settings=dict(raw.get("settings", {}) or {}),
                 events=[str(x) for x in (raw.get("events", []) or [])],
             )
@@ -59,6 +65,7 @@ class State:
             schema=SCHEMA, app="Gauto", device=self.device,
             updatedAt=int(time.time() * 1000),
             rules=self.rules, habits=self.habits, sessions=self.sessions,
+            alarms=self.alarms, timers=self.timers, reminders=self.reminders,
             settings=self.settings, events=self.events,
         )
 

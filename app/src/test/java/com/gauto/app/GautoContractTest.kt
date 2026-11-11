@@ -50,8 +50,8 @@ class GautoContractTest {
         val screens = read("ui/GautoScreens.kt") + read("ui/GautoComponents.kt") + read("ui/GautoRoot.kt")
         assertFalse("осталось старое написание в UI", screens.contains("\"GAUTO") || screens.contains("GAUTO ·"))
         val models = read("core/GautoModels.kt")
-        assertTrue(models.contains("Gauto Living Island 3.0"))
-        assertTrue(models.contains("const val VERSION = \"3.0.0\""))
+        assertTrue(models.contains("Gauto 4D Living Island 4.0"))
+        assertTrue(models.contains("const val VERSION = \"4.0.0\""))
         assertTrue(File("branding/gauto_logo.svg").exists() || File("../branding/gauto_logo.svg").exists())
     }
 
@@ -106,10 +106,52 @@ class GautoContractTest {
     }
 
     @Test
+    fun alarmOverlayHasNoSnoozeAtAll() {
+        val overlay = File("src/main/java/com/gauto/app/ui/AlarmOverlayActivity.kt").readText()
+        listOf("Я встал", "onLongPress", "BackHandler", "Gauto4DBackdrop", "AlarmRinger.stop", "WakeEffects.confirm").forEach {
+            assertTrue("оверлей потерял $it", overlay.contains(it))
+        }
+        listOf("Отложить", "отложить", "snooze", "Snooze", "SNOOZE", "на 10 минут", "10 минут").forEach {
+            assertFalse("в оверлей вернулся snooze: $it", overlay.contains(it))
+        }
+        val runtime = read("core/AlarmRuntime.kt")
+        assertTrue(runtime.contains("setFullScreenIntent"))
+        assertTrue(runtime.contains("ACTION_SUNRISE"))
+        assertTrue(runtime.contains("ACTION_TIMER_FIRE"))
+        assertTrue(runtime.contains("ACTION_REMINDER_FIRE"))
+        val ringer = read("core/AlarmRinger.kt")
+        assertTrue(ringer.contains("USAGE_ALARM"))
+        assertTrue(ringer.contains("escalationVolume"))
+        assertTrue(ringer.contains("autoStopReached"))
+        assertFalse("звук не должен предлагать отложить", ringer.contains("snooze"))
+    }
+
+    @Test
+    fun unifiedUiHasEightTabsAndAllNewBlocks() {
+        val root = read("ui/GautoRoot.kt")
+        listOf("GautoTab.ALARM", "GautoTab.TIMERS", "GautoTab.REMINDERS", "AlarmScreen(", "TimersScreen(", "RemindersScreen(", "Gauto4DBackdrop(", "fourDEnabled").forEach {
+            assertTrue("единый UI потерял $it", root.contains(it))
+        }
+        val fourD = read("ui/Gauto4D.kt")
+        listOf("cameraDistance", "rotationX", "rotationY", "phaseOfDay", "timeAxis").forEach {
+            assertTrue("4D-слой потерял $it", fourD.contains(it))
+        }
+        val protocol = read("core/SyncProtocol.kt")
+        assertTrue(protocol.contains("const val SCHEMA = 2"))
+        listOf("alarms", "timers", "reminders").forEach { assertTrue(protocol.contains(it)) }
+        val manifest = File("src/main/AndroidManifest.xml").readText()
+        assertTrue(manifest.contains(".ui.AlarmOverlayActivity"))
+        assertTrue(manifest.contains(".core.AlarmReceiver"))
+        assertTrue(manifest.contains("USE_FULL_SCREEN_INTENT"))
+        val island = read("ui/GautoIsland.kt")
+        assertTrue(island.contains("tabs.size - 1"))
+    }
+
+    @Test
     fun versionAndUpdaterAreConsistent() {
         val build = File("build.gradle.kts").readText()
-        assertTrue(build.contains("versionCode = 3"))
-        assertTrue(build.contains("versionName = \"3.0.0\""))
+        assertTrue(build.contains("versionCode = 4"))
+        assertTrue(build.contains("versionName = \"4.0.0\""))
         val runtime = read("core/GautoRuntime.kt")
         assertTrue(runtime.contains("delay(200L)"))
         assertTrue(runtime.contains("If-None-Match"))

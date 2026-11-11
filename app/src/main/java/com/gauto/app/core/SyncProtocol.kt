@@ -11,7 +11,7 @@ import kotlinx.serialization.json.Json
  * Доступ защищён коротким PIN из настроек (заголовок [PIN_HEADER]).
  */
 object SyncProtocol {
-    const val SCHEMA = 1
+    const val SCHEMA = 2
     const val PORT = 8765
     const val DISCOVERY_PORT = 8766
     const val DISCOVER_MAGIC = "GAUTO_DISCOVER_v1"
@@ -63,6 +63,9 @@ data class GautoState(
     val rules: List<GautoRule> = emptyList(),
     val habits: List<Habit> = emptyList(),
     val sessions: List<FocusSession> = emptyList(),
+    val alarms: List<GautoAlarm> = emptyList(),
+    val timers: List<GautoTimer> = emptyList(),
+    val reminders: List<GautoReminder> = emptyList(),
     val settings: GautoSettings = GautoSettings(),
     val events: List<String> = emptyList()
 )

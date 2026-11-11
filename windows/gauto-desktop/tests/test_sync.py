@@ -18,7 +18,7 @@ from gautosync.protocol import here  # noqa: E402
 
 class ProtocolTest(unittest.TestCase):
     def test_constants_match_android(self):
-        self.assertEqual(1, SCHEMA)
+        self.assertEqual(2, SCHEMA)
         self.assertEqual(8765, PORT)
         self.assertEqual(8766, DISCOVERY_PORT)
         self.assertEqual("GAUTO_DISCOVER_v1", DISCOVER_MAGIC)
@@ -28,7 +28,7 @@ class ProtocolTest(unittest.TestCase):
     def test_state_round_trip_uses_same_field_names_as_kotlin(self):
         state = State(device="Gauto phone", updatedAt=1234, rules=[{"id": "a", "name": "дела"}])
         raw = state.to_json()
-        for key in ("schema", "app", "device", "updatedAt", "rules", "habits", "sessions", "settings", "events"):
+        for key in ("schema", "app", "device", "updatedAt", "rules", "habits", "sessions", "alarms", "timers", "reminders", "settings", "events"):
             self.assertIn(f'"{key}"', raw)
         back = State.from_json(raw)
         self.assertIsNotNone(back)
@@ -82,7 +82,8 @@ class SourceGuardTest(unittest.TestCase):
         self.assertIn("Gauto", self._read("app.py"))
         self.assertIn("PySide6", self._read("requirements.txt"))
         self.assertIn("system_accents", self._read("ui/theme.py"))
-        self.assertIn("3.0.0", self._read("app.py"))
+        self.assertIn("4.0.0", self._read("app.py"))
+        self.assertIn("8", self._read("ui/island.py"))
         self.assertIn("set_statuses", window)
 
     def test_no_cloud_no_tokens(self):

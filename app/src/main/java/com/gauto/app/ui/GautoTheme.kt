@@ -21,7 +21,10 @@ object GautoAccents {
         Color(0xFF22D3EE),
         Color(0xFF34D399),
         Color(0xFFFBBF24),
-        Color(0xFFF472B6)
+        Color(0xFFF472B6),
+        Color(0xFFF87171),
+        Color(0xFFFBBF24),
+        Color(0xFF60A5FA)
     )
 }
 
@@ -63,7 +66,10 @@ fun GautoTheme(motion: Float = 1f, content: @Composable () -> Unit) {
     val dynamic = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
     val scheme = if (dynamic) dynamicDarkColorScheme(context) else GautoDark
     val accents = if (dynamic) {
-        listOf(scheme.primary, scheme.secondary, scheme.tertiary, scheme.error, scheme.primaryContainer)
+        listOf(
+            scheme.primary, scheme.secondary, scheme.tertiary, scheme.error,
+            scheme.primaryContainer, scheme.secondaryContainer, scheme.tertiaryContainer, scheme.inversePrimary
+        )
     } else {
         GautoAccents.DEFAULT
     }

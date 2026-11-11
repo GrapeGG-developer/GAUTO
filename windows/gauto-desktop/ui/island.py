@@ -15,7 +15,7 @@ from PySide6.QtWidgets import QWidget
 
 from .theme import system_accents
 
-TABS = ["Главная", "Правила", "Привычки", "Фокус", "Настройки"]
+TABS = ["Главная", "Будильник", "Таймеры", "Правила", "Привычки", "Фокус", "Напоминания", "Настройки"]
 
 
 class IslandWidget(QWidget):
@@ -87,7 +87,7 @@ class IslandWidget(QWidget):
     def _geometry(self, index: int):
         w, h = self.width(), self.height()
         cx, cy = w / 2.0, h - 62.0
-        angle = math.radians(-64 + index * 32)
+        angle = math.radians(-78 + index * (156 / (len(TABS) - 1)))
         pp = self._petal[index]
         radius = 150.0 * pp
         x = cx + math.sin(angle) * radius
@@ -129,6 +129,21 @@ class IslandWidget(QWidget):
         glow.setColorAt(0, QColor(accent.red(), accent.green(), accent.blue(), int(58 + 40 * self.progress)))
         glow.setColorAt(1, QColor(0, 0, 0, 0))
         painter.fillRect(self.rect(), QBrush(glow))
+
+        # 4D-слой: три оси глубины (масштаб/поворот) + четвёртая ось — время суток.
+        day_phase = (self._phase * 0.02 + 0.31) % 1.0
+        for layer in range(4):
+            layer_phase = (day_phase + layer * 0.11) % 1.0
+            tilt = math.sin(layer_phase * 2 * math.pi) * (8 + layer * 2)
+            color = QColor(self.accents[layer % len(self.accents)])
+            painter.save()
+            painter.translate(cx, h * 0.45)
+            painter.rotate(tilt)
+            painter.scale(0.78 + layer * 0.08, 0.78 + layer * 0.08)
+            painter.setBrush(Qt.NoBrush)
+            painter.setPen(QPen(QColor(color.red(), color.green(), color.blue(), 40), 2))
+            painter.drawEllipse(QPointF(0, 0), 90 + layer * 46, 90 + layer * 46)
+            painter.restore()
 
         amplify = 1.0 + 0.9 * self.progress
         for i in range(42):

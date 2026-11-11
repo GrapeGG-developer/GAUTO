@@ -39,6 +39,66 @@ class GautoStore(context: Context) {
         saveRules(rules().map { if (it.id == id) it.copy(enabled = enabled) else it })
     }
 
+    // ————— будильники, таймеры, напоминания —————
+
+    fun alarms(): List<GautoAlarm> {
+        val raw = prefs.getString(KEY_ALARMS, null) ?: return emptyList()
+        return runCatching { json.decodeFromString(ListSerializer(GautoAlarm.serializer()), raw) }
+            .getOrDefault(emptyList())
+    }
+
+    fun saveAlarms(list: List<GautoAlarm>) {
+        val clean = list.map { AlarmLogic.validateAlarm(it) }.sortedWith(compareBy({ it.hour }, { it.minute }))
+        prefs.edit().putString(KEY_ALARMS, json.encodeToString(ListSerializer(GautoAlarm.serializer()), clean)).apply()
+    }
+
+    fun upsertAlarm(alarm: GautoAlarm) {
+        val list = alarms().toMutableList()
+        val index = list.indexOfFirst { it.id == alarm.id }
+        if (index >= 0) list[index] = AlarmLogic.validateAlarm(alarm) else list.add(AlarmLogic.validateAlarm(alarm))
+        saveAlarms(list)
+    }
+
+    fun deleteAlarm(id: String) = saveAlarms(alarms().filterNot { it.id == id })
+
+    fun timers(): List<GautoTimer> {
+        val raw = prefs.getString(KEY_TIMERS, null) ?: return emptyList()
+        return runCatching { json.decodeFromString(ListSerializer(GautoTimer.serializer()), raw) }
+            .getOrDefault(emptyList())
+    }
+
+    fun saveTimers(list: List<GautoTimer>) {
+        prefs.edit().putString(KEY_TIMERS, json.encodeToString(ListSerializer(GautoTimer.serializer()), list.map { AlarmLogic.validateTimer(it) })).apply()
+    }
+
+    fun upsertTimer(timer: GautoTimer) {
+        val list = timers().toMutableList()
+        val index = list.indexOfFirst { it.id == timer.id }
+        if (index >= 0) list[index] = AlarmLogic.validateTimer(timer) else list.add(AlarmLogic.validateTimer(timer))
+        saveTimers(list)
+    }
+
+    fun deleteTimer(id: String) = saveTimers(timers().filterNot { it.id == id })
+
+    fun reminders(): List<GautoReminder> {
+        val raw = prefs.getString(KEY_REMINDERS, null) ?: return emptyList()
+        return runCatching { json.decodeFromString(ListSerializer(GautoReminder.serializer()), raw) }
+            .getOrDefault(emptyList())
+    }
+
+    fun saveReminders(list: List<GautoReminder>) {
+        prefs.edit().putString(KEY_REMINDERS, json.encodeToString(ListSerializer(GautoReminder.serializer()), list.map { AlarmLogic.validateReminder(it) })).apply()
+    }
+
+    fun upsertReminder(reminder: GautoReminder) {
+        val list = reminders().toMutableList()
+        val index = list.indexOfFirst { it.id == reminder.id }
+        if (index >= 0) list[index] = AlarmLogic.validateReminder(reminder) else list.add(AlarmLogic.validateReminder(reminder))
+        saveReminders(list)
+    }
+
+    fun deleteReminder(id: String) = saveReminders(reminders().filterNot { it.id == id })
+
     fun installPack(packId: String): Int {
         val pack = LifePacks.byId(packId) ?: return 0
         val before = rules().size
@@ -117,6 +177,9 @@ class GautoStore(context: Context) {
             rules = rules(),
             habits = habits(),
             sessions = sessions(),
+            alarms = alarms(),
+            timers = timers(),
+            reminders = reminders(),
             settings = settings(),
             events = events()
         )
@@ -131,6 +194,9 @@ class GautoStore(context: Context) {
         saveRules(winner.rules)
         saveHabits(winner.habits)
         saveSessions(winner.sessions)
+        saveAlarms(winner.alarms)
+        saveTimers(winner.timers)
+        saveReminders(winner.reminders)
         saveEvents(winner.events)
         saveSettings(
             winner.settings.copy(
@@ -188,13 +254,25 @@ class GautoStore(context: Context) {
         return focus?.label ?: "правило GAUTO"
     }
 
-    /** Блокировка действует, пока активно правило или идёт фокус-сессия. */
+    /** Разные режимы блокировок: правила, сон, фокус, таймер и «до подъёма». */
     fun isPackageBlocked(pkg: String, now: Long = System.currentTimeMillis()): Boolean {
+        if (pkg == "com.android.systemui" || pkg.startsWith("com.android.phone")) return false
+        if (settings().activeAlarmId.isNotBlank()) return true
         val active = activeRule()
         if (active != null && active.blockPackages.any { matches(pkg, it) }) return true
         val focus = sessions().lastOrNull { FocusLogic.isActive(it, now) }
         if (focus != null && focus.blockedPackages.any { matches(pkg, it) }) return true
+        val timer = timers().firstOrNull { it.running && it.blockMode != BlockMode.NONE }
+        if (timer != null && timer.blockMode != BlockMode.NONE) return true
         return false
+    }
+
+    fun activeBlockMode(now: Long = System.currentTimeMillis()): BlockMode = when {
+        settings().activeAlarmId.isNotBlank() -> BlockMode.ALARM
+        timers().any { it.running && it.endsAt > now } -> BlockMode.TIMER
+        sessions().any { FocusLogic.isActive(it, now) } -> BlockMode.FOCUS
+        activeRule()?.blockPackages?.isNotEmpty() == true -> BlockMode.APP
+        else -> BlockMode.NONE
     }
 
     private fun matches(actual: String, blocked: String): Boolean =
@@ -206,5 +284,8 @@ class GautoStore(context: Context) {
         private const val KEY_SESSIONS = "sessions"
         private const val KEY_SETTINGS = "settings"
         private const val KEY_EVENTS = "events"
+        private const val KEY_ALARMS = "alarms"
+        private const val KEY_TIMERS = "timers"
+        private const val KEY_REMINDERS = "reminders"
     }
 }

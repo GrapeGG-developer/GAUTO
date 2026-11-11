@@ -55,7 +55,7 @@ class MainWindow(QMainWindow):
 
         layout.addWidget(self._build_top_bar())
         self.stack = QStackedWidget()
-        for index in range(5):
+        for index in range(8):
             self.stack.addWidget(self._build_page(index))
         layout.addWidget(self.stack, 1)
 
@@ -163,18 +163,36 @@ class MainWindow(QMainWindow):
                 "и приезжает сюда само.")
             box.addWidget(hint)
         elif index == 1:
+            box.addWidget(self._card("будильник", "Без откладывания: только подтверждение «Я встал». Рассвет, нарастание громкости и снятие блокировок."))
+            self.alarms_table = QTableWidget(0, 5)
+            self.alarms_table.setHorizontalHeaderLabels(["время", "название", "звук", "громкость", "вкл"])
+            self.alarms_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+            box.addWidget(self.alarms_table, 1)
+        elif index == 2:
+            box.addWidget(self._card("таймеры", "Обратный отсчёт со звуком и блокировкой на время."))
+            self.timers_table = QTableWidget(0, 3)
+            self.timers_table.setHorizontalHeaderLabels(["название", "секунд", "статус"])
+            self.timers_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+            box.addWidget(self.timers_table, 1)
+        elif index == 6:
+            box.addWidget(self._card("напоминания", "По времени и дням, в едином оверлее Gauto."))
+            self.reminders_table = QTableWidget(0, 3)
+            self.reminders_table.setHorizontalHeaderLabels(["время", "текст", "вкл"])
+            self.reminders_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+            box.addWidget(self.reminders_table, 1)
+        elif index == 3:
             box.addWidget(self._card("правила", "Дни, время, яркость, громкость, блокировки и ч/б слой."))
             self.rules_table = QTableWidget(0, 5)
             self.rules_table.setHorizontalHeaderLabels(["время", "название", "яркость", "громкость", "вкл"])
             self.rules_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
             box.addWidget(self.rules_table, 1)
-        elif index == 2:
+        elif index == 4:
             box.addWidget(self._card("привычки", "Стрики, недельная цель и очки к уровню разработчика."))
             self.habits_table = QTableWidget(0, 4)
             self.habits_table.setHorizontalHeaderLabels(["привычка", "стрик", "неделя", "xp"])
             self.habits_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
             box.addWidget(self.habits_table, 1)
-        elif index == 3:
+        elif index == 5:
             box.addWidget(self._card("фокус", "Сессии Pomodoro с блокировкой отвлекающих приложений."))
             self.focus_label = QLabel("завершённых сессий: 0")
             box.addWidget(self.focus_label)
@@ -279,6 +297,7 @@ class MainWindow(QMainWindow):
             f"уровень {level} · {xp} xp",
             f"стрик {int(settings.get('streak', 0) or 0)} дн.",
             f"фокус-сессий: {sum(1 for s in state.sessions if s.get('completed'))}",
+            f"будильников: {len(state.alarms)} · таймеров: {len(state.timers)}",
             f"синхронизация: {state.device}",
         ])
 
@@ -316,6 +335,32 @@ class MainWindow(QMainWindow):
             ]
             for col, value in enumerate(values):
                 self.habits_table.setItem(row, col, QTableWidgetItem(value))
+
+        self.alarms_table.setRowCount(len(state.alarms))
+        for row, alarm in enumerate(state.alarms):
+            values = [
+                f"{int(alarm.get('hour', 0)):02d}:{int(alarm.get('minute', 0)):02d}",
+                str(alarm.get("label", "")), str(alarm.get("sound", "")),
+                f"{int(alarm.get('volume', 0))}%", "да" if alarm.get("enabled", True) else "нет",
+            ]
+            for col, value in enumerate(values):
+                self.alarms_table.setItem(row, col, QTableWidgetItem(value))
+
+        self.timers_table.setRowCount(len(state.timers))
+        for row, timer in enumerate(state.timers):
+            values = [str(timer.get("label", "")), str(timer.get("durationSec", 0)),
+                      "идёт" if timer.get("running") else "стоп"]
+            for col, value in enumerate(values):
+                self.timers_table.setItem(row, col, QTableWidgetItem(value))
+
+        self.reminders_table.setRowCount(len(state.reminders))
+        for row, reminder in enumerate(state.reminders):
+            values = [
+                f"{int(reminder.get('hour', 0)):02d}:{int(reminder.get('minute', 0)):02d}",
+                str(reminder.get("text", "")), "да" if reminder.get("enabled", True) else "нет",
+            ]
+            for col, value in enumerate(values):
+                self.reminders_table.setItem(row, col, QTableWidgetItem(value))
 
         done_sessions = [s for s in state.sessions if s.get("completed")]
         self.focus_label.setText(f"завершённых сессий: {len(done_sessions)}")

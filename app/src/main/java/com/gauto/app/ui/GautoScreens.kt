@@ -539,6 +539,15 @@ fun SettingsScreen(
                     )
                 }
                 Spacer(Modifier.height(8.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text("4D-сцена (глубина + время)", Modifier.weight(1f), fontSize = 12.sp)
+                    Switch(
+                        checked = settings.fourDEnabled,
+                        onCheckedChange = { store.saveSettings(settings.copy(fourDEnabled = it)); onChanged() }
+                    )
+                }
+                Text("Блокировки: приложения · сон · фокус · таймер · до подъёма", fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Spacer(Modifier.height(8.dp))
                 Text("живость островка", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                     listOf("спокойно" to 0, "обычно" to 1, "максимум" to 2).forEach { (label, level) ->

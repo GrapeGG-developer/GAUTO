@@ -162,6 +162,7 @@ class BootReceiver : BroadcastReceiver() {
         val app = context.applicationContext
         val store = GautoStore(app)
         GautoScheduler.scheduleAll(app, store.rules())
+        AlarmScheduler.scheduleAll(app)
         GautoUpdateJobs.schedule(app)
         if (store.settings().syncAfterBoot) {
             runCatching { app.startForegroundService(Intent(app, ApplyService::class.java)) }
@@ -381,6 +382,7 @@ class GAUTOApp : Application() {
         runCatching {
             if (GautoStore(this).settings().syncEnabled) GautoSyncService.start(this)
         }
+        runCatching { AlarmScheduler.scheduleAll(this) }
     }
 
     private fun createChannels() {

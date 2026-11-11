@@ -42,6 +42,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import com.gauto.app.core.AlarmLogic
 import com.gauto.app.core.GautoPermissions
 import com.gauto.app.core.GautoStore
 import com.gauto.app.core.HabitsLogic
@@ -50,9 +51,12 @@ import kotlinx.coroutines.isActive
 
 enum class GautoTab(val title: String, val accent: Color) {
     HOME("Главная", Color(0xFF8B5CF6)),
+    ALARM("Будильник", Color(0xFFF87171)),
+    TIMERS("Таймеры", Color(0xFFFBBF24)),
     RULES("Правила", Color(0xFF22D3EE)),
     HABITS("Привычки", Color(0xFF34D399)),
-    FOCUS("Фокус", Color(0xFFFBBF24)),
+    FOCUS("Фокус", Color(0xFF60A5FA)),
+    REMINDERS("Напоминания", Color(0xFFA78BFA)),
     SETTINGS("Настройки", Color(0xFFF472B6))
 }
 
@@ -129,6 +133,10 @@ fun GautoRoot() {
             add("стрик ${settings.streak} дн. · ${store.habits().size} привычек")
             val done = store.sessions().count { it.completed }
             add("фокус-сессий завершено: $done")
+            val nextAlarm = store.alarms().filter { it.enabled }
+                .mapNotNull { AlarmLogic.nextTrigger(it) }
+                .minByOrNull { it.toInstant().toEpochMilli() }
+            add(if (nextAlarm != null) "подъём: ${nextAlarm.hour.toString().padStart(2, '0')}:${nextAlarm.minute.toString().padStart(2, '0')}" else "будильников нет")
             add("синхронизация с ПК: ${if (settings.syncEnabled) "вкл" else "выкл"}")
             store.events().lastOrNull()?.let { add(it.take(46)) }
         }
@@ -153,6 +161,9 @@ fun GautoRoot() {
                 accent = accents.getOrElse(tab.ordinal) { accents.first() },
                 expanded = expanded
             )
+            if (settings.fourDEnabled) {
+                Gauto4DBackdrop(expanded = expanded)
+            }
 
             Scaffold(
                 modifier = Modifier.fillMaxSize(),
@@ -180,9 +191,12 @@ fun GautoRoot() {
                     ) { target ->
                         when (target) {
                             GautoTab.HOME -> HomeScreen(store, revision, { revision++ }) { tab = it }
+                            GautoTab.ALARM -> AlarmScreen(store, revision, { revision++ })
+                            GautoTab.TIMERS -> TimersScreen(store, revision, { revision++ })
                             GautoTab.RULES -> RulesScreen(store, revision, { revision++ }, query)
                             GautoTab.HABITS -> HabitsScreen(store, revision, { revision++ })
                             GautoTab.FOCUS -> FocusScreen(store, revision, { revision++ })
+                            GautoTab.REMINDERS -> RemindersScreen(store, revision, { revision++ })
                             GautoTab.SETTINGS -> SettingsScreen(store, revision, { revision++ }) { gate = true }
                         }
                     }

@@ -15,8 +15,8 @@ android {
         applicationId = "com.gauto.app"
         minSdk = 30
         targetSdk = 36
-        versionCode = 3
-        versionName = "3.0.0"
+        versionCode = 4
+        versionName = "4.0.0"
     }
 
     testOptions {

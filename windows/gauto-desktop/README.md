@@ -1,6 +1,6 @@
-# Gauto Desktop 3.0.0
+# Gauto Desktop 4.0.0
 
-Нативное приложение **Gauto** для Windows на PySide6: тот же **Living Island 3.0** —
+Нативное приложение **Gauto** для Windows на PySide6: тот же **4D Living Island 4.0** —
 stagger-веер категорий, волна раскрытия, анимированный логотип, живая карусель
 статусов, системный акцент Windows, новая иконка, трей и автозапуск.
 
@@ -15,7 +15,8 @@ stagger-веер категорий, волна раскрытия, анимир
    кнопка `отправить на телефон` пушит изменения обратно.
 
 Протокол: `GET /api/ping`, `GET /api/state`, `POST /api/state`, заголовок `X-Gauto-Pin`.
-Один JSON с полями `schema, app, device, updatedAt, rules, habits, sessions, settings, events`.
+Один JSON `GautoState` **schema 2** с полями `schema, app, device, updatedAt, rules,
+habits, sessions, alarms, timers, reminders, settings, events`.
 Побеждает более свежее состояние (`updatedAt`).
 
 ## Запуск
@@ -28,7 +29,7 @@ python app.py
 ```
 
 Сборка exe (Windows): `python build_exe.py` (нужен `pyinstaller`), результат в `dist/Gauto/`.
-Готовая сборка приложена к prerelease `gauto-desktop-v3.0.0` как `Gauto-Desktop-win64.zip`.
+Готовая сборка приложена к prerelease `gauto-desktop-v4.0.0` как `Gauto-Desktop-win64.zip`.
 Иконка — `resources/gauto.png`; для exe используется `resources/gauto.ico`.
 
 ## Тесты

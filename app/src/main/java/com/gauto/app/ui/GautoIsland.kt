@@ -134,7 +134,7 @@ fun GautoIsland(
     val accents = LocalGautoAccents.current
     val motion = LocalGautoMotion.current
     val haptics = LocalHapticFeedback.current
-    val radiusPx = with(density) { 150.dp.toPx() }
+    val radiusPx = with(density) { 172.dp.toPx() }
     val tabs = GautoTab.entries
 
     val capsuleProgress = remember { Animatable(0f) }
@@ -213,14 +213,14 @@ fun GautoIsland(
         tabs.forEachIndexed { index, tab ->
             val pp = petalProgress[index].value.coerceIn(0f, 1f)
             if (pp < 0.005f && p < 0.005f) return@forEachIndexed
-            val angle = (-64f + index * 32f) * PI.toFloat() / 180f
+            val angle = (-78f + index * (156f / (tabs.size - 1).coerceAtLeast(1))) * PI.toFloat() / 180f
             val wobble = sin((wave * 2f * PI + index * 0.9f).toFloat()) * 5f * motion * pp
             val tx = sin(angle) * radiusPx * pp + wobble
             val ty = -cos(angle) * radiusPx * pp
             val color = accents.getOrElse(index) { accents.first() }
             Box(
                 modifier = Modifier
-                    .size(66.dp)
+                    .size(58.dp)
                     .graphicsLayer {
                         translationX = tx
                         translationY = ty
@@ -242,9 +242,9 @@ fun GautoIsland(
                 contentAlignment = Alignment.Center
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Canvas(Modifier.size(25.dp)) { drawGlyph(index, Color.White, pp) }
+                    Canvas(Modifier.size(22.dp)) { drawGlyph(index, Color.White, pp) }
                     Spacer(Modifier.height(3.dp))
-                    Text(tab.title, color = Color.White, fontSize = 8.sp, maxLines = 1)
+                    Text(tab.title, color = Color.White, fontSize = 7.sp, maxLines = 1)
                 }
             }
         }

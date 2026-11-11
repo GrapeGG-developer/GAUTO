@@ -4,7 +4,7 @@ from __future__ import annotations
 from PySide6.QtCore import QSettings
 from PySide6.QtGui import QColor
 
-DEFAULT = ["#8B5CF6", "#22D3EE", "#34D399", "#FBBF24", "#F472B6"]
+DEFAULT = ["#8B5CF6", "#F87171", "#FBBF24", "#22D3EE", "#34D399", "#60A5FA", "#A78BFA", "#F472B6"]
 
 
 def system_accents() -> list[str]:
@@ -21,6 +21,6 @@ def system_accents() -> list[str]:
         hue = base.hslHueF()
         if hue < 0:
             return DEFAULT
-        return [QColor.fromHslF((hue + shift) % 1.0, 0.62, 0.62, 1.0).name() for shift in (0.0, 0.14, 0.33, 0.10, 0.87)]
+        return [QColor.fromHslF((hue + shift) % 1.0, 0.62, 0.62, 1.0).name() for shift in (0.0, 0.03, 0.10, 0.14, 0.33, 0.55, 0.72, 0.87)]
     except Exception:
         return DEFAULT
