@@ -64,102 +64,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 
 @Composable
-fun HomeScreen(
-    store: GautoStore,
-    revision: Int,
-    onChanged: () -> Unit,
-    onTab: (GautoTab) -> Unit
-) {
-    val rules = remember(revision) { store.rules() }
-    val habits = remember(revision) { store.habits() }
-    val settings = remember(revision) { store.settings() }
-    val active = remember(revision) { store.activeRule() }
-    val next = remember(revision) {
-        rules.mapNotNull { rule -> RuleLogic.nextOccurrence(rule)?.let { it to rule } }
-            .minByOrNull { it.first.toInstant().toEpochMilli() }?.second
-    }
-    val level = HabitsLogic.level(settings.xp)
-    val streak = habits.maxOfOrNull { HabitsLogic.streak(it.doneDates) } ?: 0
-
-    LazyColumn(
-        modifier = Modifier.fillMaxSize().padding(start = 12.dp, end = 12.dp, top = 12.dp, bottom = 212.dp),
-        verticalArrangement = Arrangement.spacedBy(10.dp)
-    ) {
-        item {
-            GautoCard {
-                Text("Gauto", style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.primary)
-                Text("личная жизнь → навык разработки", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                Spacer(Modifier.height(10.dp))
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    StatPill("уровень", level.toString())
-                    StatPill("стрик", "$streak дн.")
-                    StatPill("xp", settings.xp.toString())
-                }
-                Spacer(Modifier.height(8.dp))
-                LinearProgressIndicator(progress = { HabitsLogic.progress(settings.xp) }, modifier = Modifier.fillMaxWidth())
-                Text(HabitsLogic.title(settings.xp), fontSize = 11.sp, color = MaterialTheme.colorScheme.secondary)
-            }
-        }
-        item {
-            GautoCard {
-                SectionTitle("сейчас действует")
-                if (active == null) {
-                    Text("Правил пока нет — установите готовый набор или создайте своё.", fontSize = 12.sp)
-                } else {
-                    Text("${active.timeLabel} · ${active.name}", style = MaterialTheme.typography.titleMedium)
-                    Text(active.daysLabel(), fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    if (active.useBrightness) Text("яркость ${active.brightness}%", fontSize = 11.sp)
-                    if (active.useVolume) Text("громкость ${active.volume}%", fontSize = 11.sp)
-                    if (active.grayscale) Text("экран монохромный", fontSize = 11.sp, color = MaterialTheme.colorScheme.secondary)
-                    if (active.blockPackages.isNotEmpty()) {
-                        Text("заблокировано приложений: ${active.blockPackages.size}", fontSize = 11.sp)
-                    }
-                }
-                next?.let {
-                    Spacer(Modifier.height(6.dp))
-                    Text("дальше: ${it.timeLabel} · ${it.name}", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                }
-            }
-        }
-        item {
-            GautoCard {
-                SectionTitle("быстрый старт")
-                Text("Один тап — и правила уже работают.", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                Spacer(Modifier.height(8.dp))
-                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Button(onClick = { store.installPack("chores"); onChanged() }, modifier = Modifier.weight(1f)) {
-                        Text("домашние дела", fontSize = 10.sp)
-                    }
-                    Button(onClick = { store.installPack("sleep"); onChanged() }, modifier = Modifier.weight(1f)) {
-                        Text("сон", fontSize = 10.sp)
-                    }
-                }
-                Spacer(Modifier.height(6.dp))
-                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    OutlinedButton(onClick = { onTab(GautoTab.FOCUS) }, modifier = Modifier.weight(1f)) {
-                        Text("фокус", fontSize = 10.sp)
-                    }
-                    OutlinedButton(onClick = { onTab(GautoTab.RULES) }, modifier = Modifier.weight(1f)) {
-                        Text("правила", fontSize = 10.sp)
-                    }
-                }
-            }
-        }
-        item {
-            GautoCard {
-                SectionTitle("не стопайся")
-                Text(
-                    "Блокировки, ч/б экран и фокус-сессии снимают мелкие отвлечения. " +
-                        "Каждое выполненное дело даёт xp и повышает уровень разработчика.",
-                    fontSize = 12.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        }
-    }
-}
-
-@Composable
 private fun RuleCard(
     rule: GautoRule,
     onClick: () -> Unit,
@@ -204,6 +108,7 @@ fun RulesScreen(store: GautoStore, revision: Int, onChanged: () -> Unit, query: 
     val context = LocalContext.current
     var editorOpen by remember { mutableStateOf(false) }
     var editorRule by remember { mutableStateOf<GautoRule?>(null) }
+    var showPacks by remember { mutableStateOf(false) }
     val allRules = remember(revision) { store.rules() }
     val rules = remember(revision, query) {
         RuleSort.apply(allRules.filter { RuleLogic.matches(query, it) }, store.settings().ruleSort)
@@ -227,16 +132,17 @@ fun RulesScreen(store: GautoStore, revision: Int, onChanged: () -> Unit, query: 
                 )
             }
             item {
-                Spacer(Modifier.height(6.dp))
-                SectionTitle("готовые наборы")
-                Text("${LifePacks.ALL.size} сценариев · ${LifePacks.ALL.sumOf { it.specs.size }} правил", fontSize = 11.sp)
-                Text("школа, домашние дела, сон, глубокий код, детокс и день релиза", fontSize = 10.sp)
+                OutlinedButton(onClick = { showPacks = !showPacks }, modifier = Modifier.fillMaxWidth()) {
+                    Text(if (showPacks) "Скрыть готовые планы" else "Готовые планы · ${LifePacks.ALL.size}")
+                }
             }
-            items(LifePacks.ALL, key = { it.id }) { pack ->
-                PackCard(pack, LifePacks.isInstalled(allRules, pack)) {
-                    store.installPack(pack.id)
-                    GautoScheduler.scheduleAll(context, store.rules())
-                    onChanged()
+            if (showPacks) {
+                items(LifePacks.ALL, key = { it.id }) { pack ->
+                    PackCard(pack, LifePacks.isInstalled(allRules, pack)) {
+                        store.installPack(pack.id)
+                        GautoScheduler.scheduleAll(context, store.rules())
+                        onChanged()
+                    }
                 }
             }
             item { Spacer(Modifier.height(80.dp)) }
@@ -378,53 +284,6 @@ fun FocusScreen(store: GautoStore, revision: Int, onChanged: () -> Unit) {
 }
 
 @Composable
-fun StatsScreen(store: GautoStore, revision: Int) {
-    val settings = remember(revision) { store.settings() }
-    val habits = remember(revision) { store.habits() }
-    val sessions = remember(revision) { store.sessions() }
-    val events = remember(revision) { store.events() }
-    val doneTotal = habits.sumOf { it.doneDates.size }
-    val blocked = events.count { it.startsWith("Заблокирован") }
-    val focusDone = sessions.count { it.completed }
-
-    LazyColumn(
-        modifier = Modifier.fillMaxSize().padding(start = 12.dp, end = 12.dp, top = 12.dp, bottom = 212.dp),
-        verticalArrangement = Arrangement.spacedBy(10.dp)
-    ) {
-        item {
-            GautoCard {
-                SectionTitle("прогресс")
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    StatPill("уровень", HabitsLogic.level(settings.xp).toString())
-                    StatPill("xp", settings.xp.toString())
-                    StatPill("стрик", settings.streak.toString())
-                }
-                Spacer(Modifier.height(8.dp))
-                LinearProgressIndicator(progress = { HabitsLogic.progress(settings.xp) }, modifier = Modifier.fillMaxWidth())
-            }
-        }
-        item {
-            GautoCard {
-                SectionTitle("что уже сделано")
-                Text("привычек отмечено: $doneTotal", fontSize = 12.sp)
-                Text("фокус-сессий завершено: $focusDone", fontSize = 12.sp)
-                Text("блокировок отвлечений: $blocked", fontSize = 12.sp)
-                Spacer(Modifier.height(6.dp))
-                Icon(Icons.Filled.TrendingUp, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-            }
-        }
-        item {
-            GautoCard {
-                SectionTitle("последние события")
-                val last = events.takeLast(10).reversed()
-                if (last.isEmpty()) Text("Событий пока нет", fontSize = 11.sp)
-                else last.forEach { Text("• $it", fontSize = 11.sp) }
-            }
-        }
-    }
-}
-
-@Composable
 fun SettingsScreen(
     store: GautoStore,
     revision: Int,
@@ -539,13 +398,6 @@ fun SettingsScreen(
                     )
                 }
                 Spacer(Modifier.height(8.dp))
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("4D-сцена (глубина + время)", Modifier.weight(1f), fontSize = 12.sp)
-                    Switch(
-                        checked = settings.fourDEnabled,
-                        onCheckedChange = { store.saveSettings(settings.copy(fourDEnabled = it)); onChanged() }
-                    )
-                }
                 Text("Блокировки: приложения · сон · фокус · таймер · до подъёма", fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Spacer(Modifier.height(8.dp))
                 Text("живость островка", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)

@@ -13,9 +13,9 @@ object GautoRepo {
     const val OWNER = "GrapeGG-developer"
     const val NAME = "GAUTO"
     const val REPO = "GrapeGG-developer/GAUTO"
-    const val VERSION = "4.0.0"
-    const val VERSION_CODE = 4
-    const val UI_VERSION = "Gauto 4D Living Island 4.0"
+    const val VERSION = "5.0.0"
+    const val VERSION_CODE = 5
+    const val UI_VERSION = "Gauto Clear UI 5.0"
     const val DEFAULT_BLOCKED = "com.google.android.youtube,com.google.android.apps.youtube.music,com.ss.android.ugc.trill,com.instagram.android"
     fun apkName(tag: String): String = "GAUTO-$tag-debug.apk"
     fun defaultBlocked(): List<String> = DEFAULT_BLOCKED.split(",")
@@ -74,6 +74,8 @@ data class GautoSettings(
     val lastHabitDate: String = "",
     val autoBrightnessSaved: Boolean = false,
     val autoBrightnessWasOn: Boolean = false,
+    val wakeBrightnessStart: Int = 30,
+    val wakeSunriseStartedAt: Long = 0L,
     /** Синхронизация с ПК по локальной сети. */
     val syncEnabled: Boolean = false,
     /** Короткий PIN для LAN-запросов; пустой = без проверки (только доверенная сеть). */
@@ -83,7 +85,6 @@ data class GautoSettings(
     /** Живость анимаций: 0 — спокойно, 1 — обычно, 2 — максимум. */
     val motionLevel: Int = 2,
     /** 4D-сцена: глубина + время как четвёртая ось. */
-    val fourDEnabled: Boolean = true,
     /** Идентификатор активного будильника: пока не подтверждён, блокировки действуют. */
     val activeAlarmId: String = ""
 )

@@ -383,6 +383,7 @@ class GAUTOApp : Application() {
             if (GautoStore(this).settings().syncEnabled) GautoSyncService.start(this)
         }
         runCatching { AlarmScheduler.scheduleAll(this) }
+        runCatching { GautoWidget.refresh(this) }
     }
 
     private fun createChannels() {

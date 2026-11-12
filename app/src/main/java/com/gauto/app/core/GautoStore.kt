@@ -257,7 +257,7 @@ class GautoStore(context: Context) {
     /** Разные режимы блокировок: правила, сон, фокус, таймер и «до подъёма». */
     fun isPackageBlocked(pkg: String, now: Long = System.currentTimeMillis()): Boolean {
         if (pkg == "com.android.systemui" || pkg.startsWith("com.android.phone")) return false
-        if (settings().activeAlarmId.isNotBlank()) return true
+        if (settings().activeAlarmId.isNotBlank() && pkg != "com.gauto.app" && pkg != "com.gauto.app.debug") return true
         val active = activeRule()
         if (active != null && active.blockPackages.any { matches(pkg, it) }) return true
         val focus = sessions().lastOrNull { FocusLogic.isActive(it, now) }
@@ -268,6 +268,7 @@ class GautoStore(context: Context) {
     }
 
     fun activeBlockMode(now: Long = System.currentTimeMillis()): BlockMode = when {
+        settings().activeAlarmId == "quick-sleep" -> BlockMode.SLEEP
         settings().activeAlarmId.isNotBlank() -> BlockMode.ALARM
         timers().any { it.running && it.endsAt > now } -> BlockMode.TIMER
         sessions().any { FocusLogic.isActive(it, now) } -> BlockMode.FOCUS

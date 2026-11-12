@@ -60,6 +60,17 @@ object AlarmScheduler {
         }
     }
 
+    fun scheduleSunriseStep(context: Context, alarm: GautoAlarm, atMillis: Long) {
+        val am = context.getSystemService(android.app.AlarmManager::class.java) ?: return
+        runCatching {
+            am.setExactAndAllowWhileIdle(
+                android.app.AlarmManager.RTC_WAKEUP,
+                atMillis,
+                pending(context, ACTION_SUNRISE, alarm.id)
+            )
+        }
+    }
+
     fun scheduleTimer(context: Context, timer: GautoTimer) {
         val am = context.getSystemService(android.app.AlarmManager::class.java) ?: return
         if (!timer.running) {
@@ -122,6 +133,7 @@ class AlarmReceiver : BroadcastReceiver() {
             AlarmScheduler.ACTION_ALARM_FIRE -> {
                 val alarm = store.alarms().firstOrNull { it.id == id } ?: return
                 WakeEffects.fire(app, alarm)
+                AlarmScheduler.scheduleAlarm(app, alarm)
                 AlarmRinger.start(
                     app, alarm.sound, alarm.volume, alarm.rampSec,
                     alarm.vibration, alarm.autoStopMinutes
@@ -132,6 +144,7 @@ class AlarmReceiver : BroadcastReceiver() {
             AlarmScheduler.ACTION_TIMER_FIRE -> {
                 val timer = store.timers().firstOrNull { it.id == id } ?: return
                 store.saveTimers(store.timers().map { if (it.id == id) it.copy(running = false) else it })
+                if (timer.label.startsWith("Тишина")) runCatching { DeviceActions.setDnd(app, false) }
                 AlarmRinger.playShort(app, timer.sound, timer.volume, timer.vibration)
                 store.event("Таймер завершён: ${timer.label}")
                 showOverlay(app, AlarmOverlayActivity.MODE_TIMER, timer.id, timer.label)
@@ -143,10 +156,13 @@ class AlarmReceiver : BroadcastReceiver() {
                 store.event("Напоминание: ${reminder.text}")
                 if (reminder.once) {
                     store.saveReminders(store.reminders().map { if (it.id == id) it.copy(enabled = false) else it })
+                } else {
+                    AlarmScheduler.scheduleReminder(app, reminder)
                 }
                 showOverlay(app, AlarmOverlayActivity.MODE_REMINDER, reminder.id, reminder.text)
             }
         }
+        runCatching { GautoWidget.refresh(app) }
     }
 
     private fun showOverlay(context: Context, mode: String, id: String, label: String) {

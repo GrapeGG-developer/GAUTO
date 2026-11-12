@@ -39,7 +39,7 @@ class MainWindow(QMainWindow):
     def __init__(self, icon_path: str):
         super().__init__()
         self.icon_path = icon_path
-        self.setWindowTitle("Gauto · автоматизация личной жизни")
+        self.setWindowTitle("Gauto · просто и по делу")
         self.setWindowIcon(QIcon(icon_path))
         self.resize(940, 720)
         self.setMinimumSize(760, 600)
@@ -55,7 +55,7 @@ class MainWindow(QMainWindow):
 
         layout.addWidget(self._build_top_bar())
         self.stack = QStackedWidget()
-        for index in range(8):
+        for index in range(4):
             self.stack.addWidget(self._build_page(index))
         layout.addWidget(self.stack, 1)
 
@@ -169,37 +169,11 @@ class MainWindow(QMainWindow):
             self.alarms_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
             box.addWidget(self.alarms_table, 1)
         elif index == 2:
-            box.addWidget(self._card("таймеры", "Обратный отсчёт со звуком и блокировкой на время."))
-            self.timers_table = QTableWidget(0, 3)
-            self.timers_table.setHorizontalHeaderLabels(["название", "секунд", "статус"])
-            self.timers_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
-            box.addWidget(self.timers_table, 1)
-        elif index == 6:
-            box.addWidget(self._card("напоминания", "По времени и дням, в едином оверлее Gauto."))
-            self.reminders_table = QTableWidget(0, 3)
-            self.reminders_table.setHorizontalHeaderLabels(["время", "текст", "вкл"])
-            self.reminders_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
-            box.addWidget(self.reminders_table, 1)
-        elif index == 3:
             box.addWidget(self._card("правила", "Дни, время, яркость, громкость, блокировки и ч/б слой."))
             self.rules_table = QTableWidget(0, 5)
             self.rules_table.setHorizontalHeaderLabels(["время", "название", "яркость", "громкость", "вкл"])
             self.rules_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
             box.addWidget(self.rules_table, 1)
-        elif index == 4:
-            box.addWidget(self._card("привычки", "Стрики, недельная цель и очки к уровню разработчика."))
-            self.habits_table = QTableWidget(0, 4)
-            self.habits_table.setHorizontalHeaderLabels(["привычка", "стрик", "неделя", "xp"])
-            self.habits_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
-            box.addWidget(self.habits_table, 1)
-        elif index == 5:
-            box.addWidget(self._card("фокус", "Сессии Pomodoro с блокировкой отвлекающих приложений."))
-            self.focus_label = QLabel("завершённых сессий: 0")
-            box.addWidget(self.focus_label)
-            self.focus_table = QTableWidget(0, 3)
-            self.focus_table.setHorizontalHeaderLabels(["сессия", "минут", "статус"])
-            self.focus_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
-            box.addWidget(self.focus_table, 1)
         else:
             box.addWidget(self._card("синхронизация с ПК",
                 "Телефон поднимает локальный сервер:8765 и отвечает на UDP-поиск:8766. "
@@ -230,6 +204,9 @@ class MainWindow(QMainWindow):
             self.sync_status = QLabel("не подключено")
             self.sync_status.setStyleSheet(f"color:{MUTED};")
             fbox.addWidget(self.sync_status)
+            self.more_summary = QLabel("Будильники · Таймеры · Напоминания · Привычки · Фокус")
+            self.more_summary.setStyleSheet(f"color:{MUTED};")
+            fbox.addWidget(self.more_summary)
             self.autostart = QCheckBox("запускать вместе с Windows")
             self.autostart.stateChanged.connect(self._set_autostart)
             fbox.addWidget(self.autostart)
@@ -346,32 +323,13 @@ class MainWindow(QMainWindow):
             for col, value in enumerate(values):
                 self.alarms_table.setItem(row, col, QTableWidgetItem(value))
 
-        self.timers_table.setRowCount(len(state.timers))
-        for row, timer in enumerate(state.timers):
-            values = [str(timer.get("label", "")), str(timer.get("durationSec", 0)),
-                      "идёт" if timer.get("running") else "стоп"]
-            for col, value in enumerate(values):
-                self.timers_table.setItem(row, col, QTableWidgetItem(value))
-
-        self.reminders_table.setRowCount(len(state.reminders))
-        for row, reminder in enumerate(state.reminders):
-            values = [
-                f"{int(reminder.get('hour', 0)):02d}:{int(reminder.get('minute', 0)):02d}",
-                str(reminder.get("text", "")), "да" if reminder.get("enabled", True) else "нет",
-            ]
-            for col, value in enumerate(values):
-                self.reminders_table.setItem(row, col, QTableWidgetItem(value))
-
-        done_sessions = [s for s in state.sessions if s.get("completed")]
-        self.focus_label.setText(f"завершённых сессий: {len(done_sessions)}")
-        self.focus_table.setRowCount(min(len(state.sessions), 20))
-        for row, session in enumerate(state.sessions[-20:]):
-            values = [
-                str(session.get("label", "")), str(session.get("minutes", 0)),
-                "готово" if session.get("completed") else "в процессе",
-            ]
-            for col, value in enumerate(values):
-                self.focus_table.setItem(row, col, QTableWidgetItem(value))
+        active_timers = sum(1 for timer in state.timers if timer.get("running"))
+        active_reminders = sum(1 for reminder in state.reminders if reminder.get("enabled", True))
+        done_sessions = sum(1 for session in state.sessions if session.get("completed"))
+        self.more_summary.setText(
+            f"Будильники {len(state.alarms)} · таймеры {active_timers} активны · "
+            f"напоминания {active_reminders} · привычки {len(state.habits)} · фокус {done_sessions}"
+        )
 
     def _push(self):
         client = self._client()

@@ -71,6 +71,14 @@ fun AlarmScreen(store: GautoStore, revision: Int, onChanged: () -> Unit) {
             modifier = Modifier.fillMaxSize().padding(start = 12.dp, end = 12.dp, top = 12.dp, bottom = 212.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
+            if (alarms.isEmpty()) {
+                item {
+                    GautoCard {
+                        Text("Будильников пока нет", style = MaterialTheme.typography.titleLarge)
+                        Text("Создай первый через кнопку +. На сигнале не будет «Отложить».", fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                }
+            }
             item {
                 GautoCard {
                     SectionTitle("настоящий будильник")

@@ -89,6 +89,19 @@ class AlarmLogicTest {
     }
 
     @Test
+    fun alarmAndTimerQuickActionsAreSafeAndExplicit() {
+        val quick = java.io.File("src/main/java/com/gauto/app/core/QuickActions.kt").readText()
+        assertTrue(quick.contains("fun focusTimer("))
+        assertTrue(quick.contains("fun quietTimer("))
+        assertTrue(quick.contains("fun sleep("))
+        assertTrue(quick.contains("activeAlarmId = \"quick-sleep\""))
+        assertTrue(quick.contains("fun startFocus("))
+        val overlay = java.io.File("src/main/java/com/gauto/app/ui/AlarmOverlayActivity.kt").readText()
+        assertTrue(overlay.contains("Я встал"))
+        assertFalse(overlay.contains("отложить") || overlay.contains("snooze") || overlay.contains("10 минут"))
+    }
+
+    @Test
     fun validateAlarmClampsEverything() {
         val clean = AlarmLogic.validateAlarm(
             GautoAlarm(hour = 99, minute = -3, volume = 500, rampSec = 0, sunriseMinutes = 99,

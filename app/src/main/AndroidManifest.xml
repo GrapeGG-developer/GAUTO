@@ -96,6 +96,18 @@
 
         <receiver android:name=".core.ApplyReceiver" android:exported="false" />
         <receiver android:name=".core.AlarmReceiver" android:exported="false" />
+        <receiver android:name=".core.GautoWidget" android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="com.gauto.app.widget.OPEN" />
+                <action android:name="com.gauto.app.widget.FOCUS" />
+                <action android:name="com.gauto.app.widget.SLEEP" />
+                <action android:name="com.gauto.app.widget.QUIET" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/gauto_widget_info" />
+        </receiver>
 
         <receiver android:name=".core.BootReceiver" android:exported="false">
             <intent-filter>

@@ -23,7 +23,7 @@ def main() -> int:
     app = QApplication(sys.argv)
     app.setApplicationName("Gauto")
     app.setOrganizationName("GrapeGG")
-    app.setApplicationVersion("4.0.0")
+    app.setApplicationVersion("5.0.0")
     icon_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "resources", "gauto.png")
     app.setWindowIcon(QIcon(icon_path))
     window = MainWindow(icon_path)

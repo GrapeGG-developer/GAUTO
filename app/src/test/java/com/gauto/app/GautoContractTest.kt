@@ -20,25 +20,32 @@ class GautoContractTest {
             assertFalse("вернулся скучный бар: $it", root.contains(it))
         }
         val tabs = root.substringAfter("enum class GautoTab").substringBefore("\n}")
-        listOf("HOME", "RULES", "HABITS", "FOCUS", "SETTINGS").forEach {
+        listOf("HOME", "ALARM", "RULES", "MORE").forEach {
             assertTrue("вкладка $it потерялась", tabs.contains(it))
         }
         assertTrue(root.contains("Icons.Filled.Search"))
         assertTrue(root.contains("Icons.Filled.Notifications"))
         assertTrue(root.contains("GautoAnimatedLogo("))
+        assertFalse(root.contains("GautoTab.HABITS"))
+        assertFalse(root.contains("GautoTab.FOCUS"))
+        assertFalse(root.contains("GautoTab.TIMERS"))
+        assertFalse(root.contains("GautoTab.REMINDERS"))
+        val manifest = File("src/main/AndroidManifest.xml").readText()
+        assertTrue(manifest.contains(".core.GautoWidget"))
+        assertTrue(manifest.contains("@xml/gauto_widget_info"))
+        assertTrue(File("src/main/res/layout/gauto_widget.xml").exists())
+        assertTrue(read("ui/GautoRoot.kt").contains("GautoOnboarding {"))
     }
 
     @Test
     fun islandIsReallyAnimated() {
         val island = read("ui/GautoIsland.kt")
-        listOf(
-            "Animatable(0f)", "spring(", "infiniteRepeatable(", "AnimatedContent(",
-            "graphicsLayer {", "drawGlyph(", "LaunchedEffect(expanded)",
-            "Brush.radialGradient(", "translationX =", "rotationZ ="
-        ).forEach { marker -> assertTrue("анимация $marker потерялась", island.contains(marker)) }
+        listOf("Animatable(0f)", "spring(", "tabs.forEachIndexed", "GautoAnimatedLogo(", ".clickable(enabled = p > 0.5f)").forEach {
+            assertTrue("остров потерял $it", island.contains(it))
+        }
+        assertFalse("частицы/волны снова загромождают остров", island.contains("waveTransition") || island.contains("drawLine("))
         val root = read("ui/GautoRoot.kt")
         assertTrue(root.contains("AnimatedContent("))
-        assertTrue(root.contains("slideInVertically"))
         assertTrue(root.contains("scaleIn("))
     }
 
@@ -50,8 +57,8 @@ class GautoContractTest {
         val screens = read("ui/GautoScreens.kt") + read("ui/GautoComponents.kt") + read("ui/GautoRoot.kt")
         assertFalse("осталось старое написание в UI", screens.contains("\"GAUTO") || screens.contains("GAUTO ·"))
         val models = read("core/GautoModels.kt")
-        assertTrue(models.contains("Gauto 4D Living Island 4.0"))
-        assertTrue(models.contains("const val VERSION = \"4.0.0\""))
+        assertTrue(models.contains("Gauto Clear UI 5.0"))
+        assertTrue(models.contains("const val VERSION = \"5.0.0\""))
         assertTrue(File("branding/gauto_logo.svg").exists() || File("../branding/gauto_logo.svg").exists())
     }
 
@@ -79,30 +86,20 @@ class GautoContractTest {
     }
 
     @Test
-    fun materialYouAnimatedLogoAndMaximumMotion() {
+    fun materialYouAndSimpleIslandArePresent() {
         val theme = read("ui/GautoTheme.kt")
         listOf("dynamicDarkColorScheme", "LocalGautoAccents", "LocalGautoMotion", "Build.VERSION_CODES.S").forEach {
             assertTrue("Material You потерял $it", theme.contains(it))
         }
         val logo = read("ui/GautoAnimatedLogo.kt")
-        listOf("rememberInfiniteTransition", "drawRoundRect", "drawCircle", "LocalGautoAccents", "LocalGautoMotion").forEach {
-            assertTrue("анимированный логотип потерял $it", logo.contains(it))
-        }
+        listOf("rememberInfiniteTransition", "drawRoundRect", "drawCircle", "LocalGautoAccents").forEach { assertTrue(logo.contains(it)) }
         val island = read("ui/GautoIsland.kt")
-        listOf(
-            "petalProgress", "delay(", "statusCarousel", "statuses", "waveTransition",
-            "GautoAnimatedLogo(", "LocalHapticFeedback", "LocalGautoMotion", "drawLine("
-        ).forEach { marker -> assertTrue("максимум движения потерял $marker", island.contains(marker)) }
-        val root = read("ui/GautoRoot.kt")
-        assertTrue(root.contains("GautoAnimatedLogo("))
-        assertTrue(root.contains("GautoTheme(motion = motion)"))
-        assertTrue(root.contains("LocalGautoAccents"))
-        assertTrue(root.contains("statuses = statuses"))
-        val screens = read("ui/GautoScreens.kt")
-        assertTrue(screens.contains("живость островка"))
-        assertTrue(screens.contains("motionLevel"))
-        val models = read("core/GautoModels.kt")
-        assertTrue(models.contains("motionLevel"))
+        listOf("Animatable(0f)", "spring(", "tabs.forEachIndexed", "GautoAnimatedLogo(").forEach { assertTrue(island.contains(it)) }
+        assertFalse(island.contains("waveTransition") || island.contains("drawLine("))
+        val widget = read("core/GautoWidget.kt")
+        assertTrue(widget.contains("RemoteViews"))
+        assertTrue(widget.contains("ACTION_FOCUS"))
+        assertTrue(File("src/main/res/layout/gauto_widget.xml").exists())
     }
 
     @Test
@@ -123,35 +120,73 @@ class GautoContractTest {
         assertTrue(ringer.contains("USAGE_ALARM"))
         assertTrue(ringer.contains("escalationVolume"))
         assertTrue(ringer.contains("autoStopReached"))
-        assertFalse("звук не должен предлагать отложить", ringer.contains("snooze"))
+        assertTrue("авто-стоп должен отличаться от переноса", ringer.contains("autoStopReached"))
     }
 
     @Test
-    fun unifiedUiHasEightTabsAndAllNewBlocks() {
+    fun fourSectionsKeepAllSpecializedFunctionsUnderMore() {
         val root = read("ui/GautoRoot.kt")
-        listOf("GautoTab.ALARM", "GautoTab.TIMERS", "GautoTab.REMINDERS", "AlarmScreen(", "TimersScreen(", "RemindersScreen(", "Gauto4DBackdrop(", "fourDEnabled").forEach {
-            assertTrue("единый UI потерял $it", root.contains(it))
-        }
+        listOf("GautoTab.HOME", "GautoTab.ALARM", "GautoTab.RULES", "GautoTab.MORE").forEach { assertTrue(root.contains(it)) }
+        val more = read("ui/MoreScreen.kt")
+        listOf("MorePage.TIMERS", "MorePage.REMINDERS", "MorePage.HABITS", "MorePage.FOCUS", "MorePage.SETTINGS", "BackupScreen(").forEach { assertTrue(more.contains(it)) }
         val fourD = read("ui/Gauto4D.kt")
-        listOf("cameraDistance", "rotationX", "rotationY", "phaseOfDay", "timeAxis").forEach {
-            assertTrue("4D-слой потерял $it", fourD.contains(it))
-        }
+        listOf("cameraDistance", "rotationX", "rotationY", "phaseOfDay").forEach { assertTrue(fourD.contains(it)) }
         val protocol = read("core/SyncProtocol.kt")
         assertTrue(protocol.contains("const val SCHEMA = 2"))
         listOf("alarms", "timers", "reminders").forEach { assertTrue(protocol.contains(it)) }
         val manifest = File("src/main/AndroidManifest.xml").readText()
         assertTrue(manifest.contains(".ui.AlarmOverlayActivity"))
         assertTrue(manifest.contains(".core.AlarmReceiver"))
+        assertTrue(manifest.contains(".core.GautoWidget"))
         assertTrue(manifest.contains("USE_FULL_SCREEN_INTENT"))
-        val island = read("ui/GautoIsland.kt")
-        assertTrue(island.contains("tabs.size - 1"))
+    }
+
+    @Test
+    fun onboardingAndWidgetMakeFirstUseClear() {
+        val onboarding = read("ui/GautoOnboarding.kt")
+        listOf("Начни с главного", "Поставь подъём", "Убери отвлечения", "Синхронизация с ПК", "GautoOnboarding").forEach {
+            assertTrue("онбординг не объясняет $it", onboarding.contains(it))
+        }
+        val widget = read("core/GautoWidget.kt")
+        listOf("GautoWidget", "ACTION_OPEN", "ACTION_FOCUS", "ACTION_SLEEP", "ACTION_QUIET", "RemoteViews").forEach {
+            assertTrue("виджет потерял $it", widget.contains(it))
+        }
+        val widgetXml = File("src/main/res/layout/gauto_widget.xml").readText()
+        listOf("widget_alarm", "widget_focus", "widget_sleep", "widget_quiet").forEach {
+            assertTrue("виджет потерял $it", widgetXml.contains(it))
+        }
+    }
+
+    @Test
+    fun todayIsShortAndMoreContainsSecondarySections() {
+        val today = read("ui/TodayScreen.kt")
+        listOf("Сегодня", "Ближайший подъём", "Быстрые действия", "Фокус 25 мин", "Тишина 30 мин", "Сон").forEach {
+            assertTrue("Сегодня потерял $it", today.contains(it))
+        }
+        val more = read("ui/MoreScreen.kt")
+        listOf("Таймеры", "Напоминания", "Привычки", "Фокус-сессии", "Настройки", "Резервная копия").forEach {
+            assertTrue("раздел «Ещё» потерял $it", more.contains(it))
+        }
+        val rules = read("ui/GautoScreens.kt")
+        assertTrue(rules.contains("Готовые планы ·"))
+        assertTrue(rules.contains("showPacks"))
+    }
+
+    @Test
+    fun noSnoozeAndWidgetHasOnlyThreeQuickActions() {
+        val overlay = read("ui/AlarmOverlayActivity.kt")
+        listOf("Отложить", "отложить", "snooze", "10 минут").forEach { assertFalse(overlay.contains(it)) }
+        val widget = read("core/GautoWidget.kt")
+        listOf("ACTION_FOCUS", "ACTION_SLEEP", "ACTION_QUIET", "widget_alarm").forEach { assertTrue(widget.contains(it)) }
+        val xml = File("src/main/res/layout/gauto_widget.xml").readText()
+        listOf("widget_focus", "widget_sleep", "widget_quiet").forEach { assertTrue(xml.contains(it)) }
     }
 
     @Test
     fun versionAndUpdaterAreConsistent() {
         val build = File("build.gradle.kts").readText()
-        assertTrue(build.contains("versionCode = 4"))
-        assertTrue(build.contains("versionName = \"4.0.0\""))
+        assertTrue(build.contains("versionCode = 5"))
+        assertTrue(build.contains("versionName = \"5.0.0\""))
         val runtime = read("core/GautoRuntime.kt")
         assertTrue(runtime.contains("delay(200L)"))
         assertTrue(runtime.contains("If-None-Match"))

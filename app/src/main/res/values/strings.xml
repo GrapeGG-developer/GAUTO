@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Gauto</string>
+    <string name="widget_description">Сегодня: подъём и быстрые действия</string>
     <string name="accessibility_description">Gauto закрывает отвлекающие приложения, пока действует правило или фокус-сессия.</string>
 </resources>

@@ -15,7 +15,7 @@ from PySide6.QtWidgets import QWidget
 
 from .theme import system_accents
 
-TABS = ["Главная", "Будильник", "Таймеры", "Правила", "Привычки", "Фокус", "Напоминания", "Настройки"]
+TABS = ["Сегодня", "Будильник", "Правила", "Ещё"]
 
 
 class IslandWidget(QWidget):

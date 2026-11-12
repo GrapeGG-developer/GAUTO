@@ -189,16 +189,49 @@ object AlarmRinger {
 
 /** Световые эффекты пробуждения: рассвет, снятие ч/б и разблокировка. */
 object WakeEffects {
+    /** Начинает плавный подъём яркости и ставит следующий 60-секундный шаг. */
     fun sunrise(context: Context, alarm: GautoAlarm) {
         val store = GautoStore(context)
-        runCatching { DeviceActions.setBrightnessPercent(context, (alarm.wakeBrightness * 0.35f).toInt().coerceAtLeast(5)) }
+        val now = System.currentTimeMillis()
+        var settings = store.settings()
+        if (!settings.autoBrightnessSaved) {
+            settings = settings.copy(
+                autoBrightnessSaved = true,
+                autoBrightnessWasOn = DeviceActions.isAutoBrightnessOn(context.contentResolver),
+                wakeBrightnessStart = DeviceActions.brightnessPercent(context),
+                wakeSunriseStartedAt = now
+            )
+            store.saveSettings(settings)
+        }
+        val trigger = AlarmLogic.nextTrigger(alarm)
+        val totalMs = alarm.sunriseMinutes.coerceAtLeast(1) * 60_000L
+        val elapsed = (now - settings.wakeSunriseStartedAt).coerceAtLeast(0L)
+        val progress = (elapsed.toFloat() / totalMs).coerceIn(0f, 1f)
+        val start = settings.wakeBrightnessStart.coerceIn(1, 100)
+        val target = alarm.wakeBrightness.coerceIn(1, 100)
+        val current = (start + (target - start) * progress).toInt().coerceIn(1, 100)
+        runCatching { DeviceActions.setBrightnessPercent(context, current) }
         if (alarm.disableGrayscale) GrayscaleController.apply(context, false)
-        store.event("Рассвет: ${alarm.label} · ${alarm.timeLabel}")
+        if (trigger != null) {
+            val nextStep = now + 60_000L
+            val triggerMs = trigger.toInstant().toEpochMilli()
+            if (nextStep < triggerMs) AlarmScheduler.scheduleSunriseStep(context, alarm, nextStep)
+        }
+        store.event("Рассвет: ${alarm.label} · яркость $current%")
     }
 
     fun fire(context: Context, alarm: GautoAlarm) {
         val store = GautoStore(context)
-        store.saveSettings(store.settings().copy(activeAlarmId = alarm.id))
+        var settings = store.settings()
+        if (!settings.autoBrightnessSaved) {
+            settings = settings.copy(
+                autoBrightnessSaved = true,
+                autoBrightnessWasOn = DeviceActions.isAutoBrightnessOn(context.contentResolver),
+                wakeBrightnessStart = DeviceActions.brightnessPercent(context),
+                wakeSunriseStartedAt = System.currentTimeMillis()
+            )
+        }
+        store.saveSettings(settings.copy(activeAlarmId = alarm.id))
         runCatching { DeviceActions.setBrightnessPercent(context, alarm.wakeBrightness) }
         if (alarm.disableGrayscale) GrayscaleController.apply(context, false)
         runCatching { DeviceActions.setDnd(context, false) }
@@ -208,8 +241,20 @@ object WakeEffects {
     fun confirm(context: Context, alarm: GautoAlarm?) {
         AlarmRinger.stop()
         val store = GautoStore(context)
-        store.saveSettings(store.settings().copy(activeAlarmId = ""))
+        val settings = store.settings()
+        if (settings.autoBrightnessSaved) {
+            if (settings.autoBrightnessWasOn) {
+                DeviceActions.setAutoBrightness(context, true)
+            } else {
+                DeviceActions.setBrightnessPercent(context, settings.wakeBrightnessStart)
+            }
+        }
+        store.saveSettings(
+            settings.copy(activeAlarmId = "", autoBrightnessSaved = false, wakeSunriseStartedAt = 0L)
+        )
         if (alarm?.unlockApps != false) GrayscaleController.apply(context, false)
+        if (alarm != null) runCatching { DeviceActions.setDnd(context, false) }
+        runCatching { GautoWidget.refresh(context) }
         store.event("Подъём подтверждён · блокировки сняты")
         runCatching { AlarmScheduler.scheduleAll(context) }
     }

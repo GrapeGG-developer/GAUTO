@@ -82,7 +82,7 @@ class SourceGuardTest(unittest.TestCase):
         self.assertIn("Gauto", self._read("app.py"))
         self.assertIn("PySide6", self._read("requirements.txt"))
         self.assertIn("system_accents", self._read("ui/theme.py"))
-        self.assertIn("4.0.0", self._read("app.py"))
+        self.assertIn("5.0.0", self._read("app.py"))
         self.assertIn("8", self._read("ui/island.py"))
         self.assertIn("set_statuses", window)
 
