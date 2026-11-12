@@ -46,4 +46,6 @@ bash check.sh clean testDebugUnitTest lintDebug assembleDebug
 APK: `app/build/outputs/apk/debug/app-debug.apk` (`com.gauto.app.debug`).
 
 
+**Релизы:** [Android latest v5.0.0](https://github.com/GrapeGG-developer/GAUTO/releases/tag/v5.0.0) · [ПК prerelease с Gauto.exe](https://github.com/GrapeGG-developer/GAUTO/releases/tag/gauto-desktop-v5.0.0).
+
 **Версия:** `5.0.0`, vc5. Приёмка: 40/40 тестов, Lint 39/0/0; APK SHA-256 `9c812af3c5631ec6317436718a8753ba5507b5067ba6a258d71c1914ba09ca83`. Подробности: `docs/release-notes-5.0.0.md`.

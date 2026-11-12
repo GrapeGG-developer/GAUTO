@@ -12,6 +12,7 @@
 - ПК-клиент сокращён до четырёх разделов. Удалены дублирующие главные карточки и 4D-слои обычных экранов; 4D оставлен в оверлее подъёма.
 - Будильник без snooze, LAN-sync, Material You и автообновление сохранены.
 - **Приёмка:** Android 40/40 тестов, Desktop 8/8, Lint 39 Warning / 0 Error / 0 Fatal, APK 61 443 978 байта, SHA-256 `9c812af3c5631ec6317436718a8753ba5507b5067ba6a258d71c1914ba09ca83`.
+- **Опубликовано:** latest `v5.0.0` (release `443114818`), Desktop prerelease `gauto-desktop-v5.0.0` (release `443114937`) с исходниками и готовым `Gauto.exe` из Windows CI, run `43245075410`.
 
 ## 4.0.0 (versionCode 4) — «4D Living Island + настоящий будильник»
 
